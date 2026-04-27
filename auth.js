@@ -7,16 +7,12 @@ async function doLogin() {
   if (!phone || !pin) return showError('loginError', 'יש למלא טלפון ו־PIN');
   if (pin.length !== 4) return showError('loginError', 'PIN חייב להיות 4 ספרות');
 
-  document.querySelector('.btn-primary').classList.add('loading');
-
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('shomrim_users')
     .select('*')
     .eq('phone', phone)
     .eq('pin', pin)
     .single();
-
-  document.querySelector('.btn-primary').classList.remove('loading');
 
   if (error || !data) return showError('loginError', 'טלפון או PIN שגויים');
 
@@ -53,8 +49,7 @@ async function doRegister() {
     if (!declared) return showError('registerError', 'יש לאשר את ההצהרה');
   }
 
-  // בדיקה אם הטלפון כבר קיים
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from('shomrim_users')
     .select('id')
     .eq('phone', phone)
@@ -73,7 +68,7 @@ async function doRegister() {
     is_verified: false
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('shomrim_users')
     .insert([userData])
     .select()
@@ -81,17 +76,16 @@ async function doRegister() {
 
   if (error) return showError('registerError', 'שגיאה בהרשמה — נסי שוב');
 
-  // שמירת קשר ילד-הורה
   if (role === ROLES.CHILD) {
     const parentPhone = document.getElementById('regParentPhone').value.trim();
-    const { data: parentData } = await supabase
+    const { data: parentData } = await db
       .from('shomrim_users')
       .select('id')
       .eq('phone', parentPhone)
       .single();
 
     if (parentData) {
-      await supabase.from('shomrim_children_parents').insert([{
+      await db.from('shomrim_children_parents').insert([{
         child_id: data.id,
         parent_id: parentData.id,
         is_real_parent: true
