@@ -39,7 +39,7 @@
   .photo-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
   .photo-btns { display: flex; gap: 12px; }
   .photo-btn { flex: 1; padding: 16px; border: 2px solid #1a3c6e; border-radius: 12px; background: white; color: #1a3c6e; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; }
-  .photo-skip { flex: 1; padding: 16px; border: 2px solid #ddd; border-radius: 12px; background: white; color: #999; font-size: 15px; cursor: pointer; font-family: inherit; text-align: center; }
+  .photo-skip { flex: 1; padding: 16px; border: 2px solid #1a3c6e; border-radius: 12px; background: white; color: #1a3c6e; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; }
   #photoPreview { width: 100%; border-radius: 12px; margin-top: 12px; display: none; }
   .send-btn { width: 100%; padding: 16px; background: #cc0000; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; font-family: inherit; margin-top: 12px; display: none; }
 
@@ -193,9 +193,9 @@
 
   async function cancelSOS() {
     if (currentEventId) {
-      await supabase.from('shomrim_sos_events').update({ status: 'handled' }).eq('id', currentEventId);
+      await _supabase.from('shomrim_sos_events').update({ status: 'handled' }).eq('id', currentEventId);
     }
-    if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    if (realtimeChannel) _supabase.removeChannel(realtimeChannel);
     document.getElementById('statusPanel').classList.remove('active');
     document.getElementById('sosBtn').classList.remove('pulsing');
     currentEventId = null;
