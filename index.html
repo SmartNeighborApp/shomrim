@@ -25,10 +25,8 @@
   .btn-primary { width: 100%; padding: 16px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; font-family: inherit; transition: background 0.2s; margin-top: 8px; }
   .btn-primary:hover { background: #2e5ca8; }
   .btn-primary:active { transform: scale(0.98); }
-  .divider { text-align: center; color: #aaa; margin: 16px 0; font-size: 14px; }
   .error { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; padding: 10px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; display: none; }
   .success { background: #f0fff4; border: 1px solid #ccffdd; color: #006622; padding: 10px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; display: none; }
-  .loading { opacity: 0.6; pointer-events: none; }
   #loginForm, #registerForm { display: none; }
   #loginForm.active, #registerForm.active { display: block; }
 </style>
@@ -113,6 +111,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script>
