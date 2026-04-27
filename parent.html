@@ -114,7 +114,7 @@
     }
     list.innerHTML = '';
     for (const ev of events) {
-      const { data: childData } = await supabase.from('shomrim_users').select('name').eq('id', ev.child_id).single();
+      const { data: childData } = await _supabase.from('shomrim_users').select('name').eq('id', ev.child_id).single();
       const childName = childData ? childData.name : 'ילד לא ידוע';
       const responded = respondedEvents.has(ev.id);
       const card = document.createElement('div');
@@ -145,7 +145,7 @@
     btn.textContent = '✅ אני בדרך';
     btn.classList.add('responded');
     document.getElementById(`doneBtn-${eventId}`).style.display = 'flex';
-    await supabase.from('shomrim_responders').insert([{
+    await _supabase.from('shomrim_responders').insert([{
       event_id: eventId,
       parent_id: session.id,
       status: 'coming'
@@ -153,11 +153,11 @@
   }
 
   async function markDone(eventId) {
-    await supabase.from('shomrim_responders')
+    await _supabase.from('shomrim_responders')
       .update({ status: 'done' })
       .eq('event_id', eventId)
       .eq('parent_id', session.id);
-    await supabase.from('shomrim_sos_events')
+    await _supabase.from('shomrim_sos_events')
       .update({ status: 'handled' })
       .eq('id', eventId);
     document.getElementById(`event-${eventId}`).remove();
@@ -166,7 +166,7 @@
   }
 
   async function loadEvents() {
-    const { data } = await supabase
+    const { data } = await _supabase
       .from('shomrim_sos_events')
       .select('*')
       .eq('status', 'open')
@@ -175,7 +175,7 @@
   }
 
   // האזנה בזמן אמת לאירועים חדשים
-  supabase.channel('sos_events')
+  _supabase.channel('sos_events')
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
