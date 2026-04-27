@@ -1,5 +1,7 @@
 // sos.js — לוגיקת SOS שומרים
 
+let pollingInterval = null;
+
 async function triggerSOS(session, urgency, photoFile) {
   // קבלת מיקום
   let lat = null, lng = null;
@@ -45,29 +47,55 @@ async function triggerSOS(session, urgency, photoFile) {
     return;
   }
 
-  // שמירת event id גלובלי
+  // שמירת event id גלובלי ובsessionStorage
   currentEventId = event.id;
+  sessionStorage.setItem('shomrim_active_sos', event.id);
 
-  // האזנה בזמן אמת למגיבים
-  realtimeChannel = _supabase
-    .channel('responders_' + event.id)
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'shomrim_responders',
-      filter: `event_id=eq.${event.id}`
-    }, async () => {
-      // ספירת מגיבים
-      const { count } = await _supabase
-        .from('shomrim_responders')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_id', event.id)
-        .eq('status', 'coming');
-      updateResponders(count || 0);
-    })
-    .subscribe();
+  // polling כל 3 שניות לספירת מגיבים
+  startPolling(event.id);
 
   // עדכון מיקום חי
+  startLocationUpdates(session.id);
+}
+
+function startPolling(eventId) {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(async () => {
+    const { count } = await _supabase
+      .from('shomrim_responders')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+      .eq('status', 'coming');
+    updateResponders(count || 0);
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollingInterval) clearInterval(pollingInterval);
+}
+
+// בדיקה בטעינת הדף — האם יש קריאה פתוחה
+async function checkActiveEvent(session) {
+  const savedEventId = sessionStorage.getItem('shomrim_active_sos');
+  if (!savedEventId) return;
+
+  const { data: event } = await _supabase
+    .from('shomrim_sos_events')
+    .select('*')
+    .eq('id', savedEventId)
+    .eq('status', 'open')
+    .single();
+
+  if (!event) {
+    sessionStorage.removeItem('shomrim_active_sos');
+    return;
+  }
+
+  // יש קריאה פתוחה — חזרה למצב SOS
+  currentEventId = event.id;
+  document.getElementById('sosBtn').classList.add('pulsing');
+  document.getElementById('statusPanel').classList.add('active');
+  startPolling(event.id);
   startLocationUpdates(session.id);
 }
 
