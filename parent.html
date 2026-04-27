@@ -89,6 +89,20 @@
 
   const respondedEvents = new Set();
 
+  async function getAddress(lat, lng) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=he`);
+      const data = await res.json();
+      const a = data.address;
+      const road = a.road || a.pedestrian || a.suburb || '';
+      const house = a.house_number ? ' ' + a.house_number : '';
+      const city = a.city || a.town || a.village || '';
+      return `${road}${house}${city ? ', ' + city : ''}` || 'כתובת לא זמינה';
+    } catch (e) {
+      return 'כתובת לא זמינה';
+    }
+  }
+
   function urgencyLabel(u) {
     if (u === 'low') return '🟡 בינוני';
     if (u === 'high') return '🟠 דחוף';
@@ -117,6 +131,7 @@
       const { data: childData } = await _supabase.from('shomrim_users').select('name').eq('id', ev.child_id).single();
       const childName = childData ? childData.name : 'ילד לא ידוע';
       const responded = respondedEvents.has(ev.id);
+      const address = ev.lat && ev.lng ? await getAddress(ev.lat, ev.lng) : 'מיקום לא זמין';
       const card = document.createElement('div');
       card.className = `event-card urgency-${ev.urgency}`;
       card.id = `event-${ev.id}`;
@@ -126,7 +141,7 @@
           <div class="event-time">${timeAgo(ev.created_at)}</div>
         </div>
         <div class="event-child">🧒 ${childName}</div>
-        <div class="event-location">📍 ${ev.lat && ev.lng ? `${ev.lat.toFixed(4)}, ${ev.lng.toFixed(4)}` : 'מיקום לא זמין'}</div>
+        <div class="event-location">📍 ${address}</div>
         ${ev.photo_url ? `<img class="event-photo" src="${ev.photo_url}">` : ''}
         <div class="event-actions">
           <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)">
