@@ -75,8 +75,11 @@ async function doRegister() {
       }]);
     }
   }
-  showSuccess('registerSuccess', '✅ נרשמת בהצלחה! כעת תוכל/י להתחבר');
-  setTimeout(() => showTab('login'), 2000);
+ showSuccess('registerSuccess', '✅ נרשמת בהצלחה! כעת תוכל/י להתחבר');
+  setTimeout(() => {
+    showTab('login');
+    document.getElementById('loginPhone').value = phone;
+  }, 2000);
 }
 function getSession() {
   const s = sessionStorage.getItem(SESSION_KEY);
