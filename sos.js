@@ -17,17 +17,17 @@ async function triggerSOS(session, urgency, photoFile) {
   let photo_url = null;
   if (photoFile) {
     const fileName = `sos_${Date.now()}_${session.id}.jpg`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await _supabase.storage
       .from('shomrim-photos')
       .upload(fileName, photoFile, { upsert: true });
     if (!uploadError) {
-      const { data: urlData } = supabase.storage.from('shomrim-photos').getPublicUrl(fileName);
+      const { data: urlData } = _supabase.storage.from('shomrim-photos').getPublicUrl(fileName);
       photo_url = urlData.publicUrl;
     }
   }
 
   // שמירת אירוע SOS
-  const { data: event, error } = await supabase
+  const { data: event, error } = await _supabase
     .from('shomrim_sos_events')
     .insert([{
       child_id: session.id,
@@ -49,7 +49,7 @@ async function triggerSOS(session, urgency, photoFile) {
   currentEventId = event.id;
 
   // האזנה בזמן אמת למגיבים
-  realtimeChannel = supabase
+  realtimeChannel = _supabase
     .channel('responders_' + event.id)
     .on('postgres_changes', {
       event: 'INSERT',
@@ -58,7 +58,7 @@ async function triggerSOS(session, urgency, photoFile) {
       filter: `event_id=eq.${event.id}`
     }, async () => {
       // ספירת מגיבים
-      const { count } = await supabase
+      const { count } = await _supabase
         .from('shomrim_responders')
         .select('*', { count: 'exact', head: true })
         .eq('event_id', event.id)
@@ -77,7 +77,7 @@ function startLocationUpdates(userId) {
   if (!navigator.geolocation) return;
   locationInterval = setInterval(() => {
     navigator.geolocation.getCurrentPosition(async pos => {
-      await supabase.from('shomrim_locations').upsert({
+      await _supabase.from('shomrim_locations').upsert({
         user_id: userId,
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
