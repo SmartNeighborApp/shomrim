@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומרים — ילד</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 10px; }
+  .header h2 { color: #1a3c6e; font-size: 20px; }
+  .logout-btn { background: none; border: none; color: #999; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .welcome { font-size: 18px; color: #444; margin-bottom: 30px; text-align: center; }
+  .welcome span { color: #1a3c6e; font-weight: bold; }
+
+  /* כפתור SOS */
+  .sos-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; }
+  .sos-btn { width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(135deg, #cc0000, #ff4444); color: white; font-size: 36px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 8px 30px rgba(204,0,0,0.4); transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
+  .sos-btn:active { transform: scale(0.95); box-shadow: 0 4px 15px rgba(204,0,0,0.4); }
+  .sos-btn.pulsing { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 8px 30px rgba(204,0,0,0.4); } 50% { box-shadow: 0 8px 50px rgba(204,0,0,0.8), 0 0 0 20px rgba(204,0,0,0.1); } }
+  .sos-btn span { font-size: 16px; font-weight: normal; }
+
+  /* רמת דחיפות */
+  .urgency-panel { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
+  .urgency-panel.active { display: block; }
+  .urgency-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
+  .urgency-btns { display: flex; flex-direction: column; gap: 12px; }
+  .urgency-btn { padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: all 0.2s; display: flex; align-items: center; gap: 12px; }
+  .urgency-btn:active { transform: scale(0.98); }
+  .urgency-low { background: #fff9e6; color: #856404; border: 2px solid #ffc107; }
+  .urgency-high { background: #fff3e6; color: #7d3c00; border: 2px solid #ff7700; }
+  .urgency-critical { background: #fff0f0; color: #cc0000; border: 2px solid #ff0000; }
+  .urgency-icon { font-size: 24px; }
+
+  /* תמונה */
+  .photo-panel { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
+  .photo-panel.active { display: block; }
+  .photo-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
+  .photo-btns { display: flex; gap: 12px; }
+  .photo-btn { flex: 1; padding: 16px; border: 2px solid #1a3c6e; border-radius: 12px; background: white; color: #1a3c6e; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; }
+  .photo-skip { flex: 1; padding: 16px; border: 2px solid #ddd; border-radius: 12px; background: white; color: #999; font-size: 15px; cursor: pointer; font-family: inherit; text-align: center; }
+  #photoPreview { width: 100%; border-radius: 12px; margin-top: 12px; display: none; }
+  .send-btn { width: 100%; padding: 16px; background: #cc0000; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; font-family: inherit; margin-top: 12px; display: none; }
+
+  /* סטטוס */
+  .status-panel { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; display: none; }
+  .status-panel.active { display: block; }
+  .status-icon { font-size: 60px; margin-bottom: 16px; }
+  .status-text { font-size: 20px; font-weight: bold; color: #1a3c6e; margin-bottom: 8px; }
+  .status-sub { font-size: 15px; color: #666; margin-bottom: 20px; }
+  .responders-count { font-size: 32px; font-weight: bold; color: #cc0000; }
+  .cancel-btn { padding: 12px 24px; border: 2px solid #ddd; border-radius: 12px; background: white; color: #999; font-size: 15px; cursor: pointer; font-family: inherit; margin-top: 16px; }
+
+  /* חיוג מהיר */
+  .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  .emergency-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 14px; text-align: center; }
+  .emergency-btns { display: flex; gap: 10px; }
+  .emergency-btn { flex: 1; padding: 14px 8px; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; }
+  .emergency-btn span { font-size: 22px; }
+  .btn-police { background: #e8f0ff; color: #1a3c6e; }
+  .btn-ambulance { background: #fff0f0; color: #cc0000; }
+  .btn-fire { background: #fff5e6; color: #cc5500; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>🛡️ שומרים</h2>
+  <button class="logout-btn" onclick="logout()">יציאה</button>
+</div>
+
+<div class="welcome">שלום, <span id="userName">—</span></div>
+
+<!-- כפתור SOS -->
+<div class="sos-container">
+  <button class="sos-btn" id="sosBtn" onclick="startSOS()">
+    🆘
+    <span>לחץ לעזרה</span>
+  </button>
+</div>
+
+<!-- בחירת דחיפות -->
+<div class="urgency-panel" id="urgencyPanel">
+  <div class="urgency-title">מה רמת הדחיפות?</div>
+  <div class="urgency-btns">
+    <button class="urgency-btn urgency-low" onclick="selectUrgency('low')">
+      <span class="urgency-icon">🟡</span>
+      בינוני — מצב לא נעים
+    </button>
+    <button class="urgency-btn urgency-high" onclick="selectUrgency('high')">
+      <span class="urgency-icon">🟠</span>
+      דחוף — צריך עזרה מיד
+    </button>
+    <button class="urgency-btn urgency-critical" onclick="selectUrgency('critical')">
+      <span class="urgency-icon">🔴</span>
+      חירום — סכנת חיים
+    </button>
+  </div>
+</div>
+
+<!-- תמונה -->
+<div class="photo-panel" id="photoPanel">
+  <div class="photo-title">📸 רוצה לצלם תמונה?</div>
+  <div class="photo-btns">
+    <button class="photo-btn" onclick="takePhoto()">📷 צלם תמונה</button>
+    <button class="photo-skip" onclick="sendSOS(null)">דלג ושלח עכשיו</button>
+  </div>
+  <img id="photoPreview">
+  <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="photoSelected(this)">
+  <button class="send-btn" id="sendWithPhoto" onclick="sendWithPhoto()">🆘 שלח עם תמונה</button>
+</div>
+
+<!-- סטטוס -->
+<div class="status-panel" id="statusPanel">
+  <div class="status-icon">🔴</div>
+  <div class="status-text">קריאת SOS נשלחה!</div>
+  <div class="status-sub">מחפש הורים קרובים...</div>
+  <div class="responders-count" id="respondersCount">0</div>
+  <div style="font-size:15px; color:#666;">הורים בדרך אליך</div>
+  <button class="cancel-btn" onclick="cancelSOS()">ביטול — הכל בסדר</button>
+</div>
+
+<!-- חיוג מהיר -->
+<div class="emergency-panel">
+  <div class="emergency-title">חיוג מהיר לחירום</div>
+  <div class="emergency-btns">
+    <a href="tel:100" class="emergency-btn btn-police"><span>👮</span>משטרה<br>100</a>
+    <a href="tel:101" class="emergency-btn btn-ambulance"><span>🚑</span>מד"א<br>101</a>
+    <a href="tel:102" class="emergency-btn btn-fire"><span>🚒</span>כיבוי<br>102</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="sos.js"></script>
+<script>
+  let currentUrgency = null;
+  let currentEventId = null;
+  let realtimeChannel = null;
+
+  // בדיקת session
+  const session = getSession();
+  if (!session || session.role !== 'child') window.location.href = 'index.html';
+  document.getElementById('userName').textContent = session.name.split(' ')[0];
+
+  function startSOS() {
+    document.getElementById('urgencyPanel').classList.add('active');
+    document.getElementById('sosBtn').classList.add('pulsing');
+  }
+
+  function selectUrgency(level) {
+    currentUrgency = level;
+    document.getElementById('urgencyPanel').classList.remove('active');
+    document.getElementById('photoPanel').classList.add('active');
+  }
+
+  function takePhoto() {
+    document.getElementById('photoInput').click();
+  }
+
+  function photoSelected(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const preview = document.getElementById('photoPreview');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        document.getElementById('sendWithPhoto').style.display = 'block';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  async function sendWithPhoto() {
+    const file = document.getElementById('photoInput').files[0];
+    await sendSOS(file);
+  }
+
+  async function sendSOS(photoFile) {
+    document.getElementById('photoPanel').classList.remove('active');
+    document.getElementById('statusPanel').classList.add('active');
+    await triggerSOS(session, currentUrgency, photoFile);
+  }
+
+  function updateResponders(count) {
+    document.getElementById('respondersCount').textContent = count;
+    if (count > 0) {
+      document.querySelector('.status-sub').textContent = 'הורים בדרך אליך! 💪';
+    }
+  }
+
+  async function cancelSOS() {
+    if (currentEventId) {
+      await supabase.from('shomrim_sos_events').update({ status: 'handled' }).eq('id', currentEventId);
+    }
+    if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    document.getElementById('statusPanel').classList.remove('active');
+    document.getElementById('sosBtn').classList.remove('pulsing');
+    currentEventId = null;
+    currentUrgency = null;
+  }
+</script>
+</body>
+</html>
