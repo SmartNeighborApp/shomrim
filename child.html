@@ -145,6 +145,9 @@
   if (!session || session.role !== 'child') window.location.href = 'index.html';
   document.getElementById('userName').textContent = session.name.split(' ')[0];
 
+  // בדיקת קריאה פתוחה בטעינת הדף
+  checkActiveEvent(session);
+
   function startSOS() {
     document.getElementById('urgencyPanel').classList.add('active');
     document.getElementById('sosBtn').classList.add('pulsing');
@@ -196,6 +199,9 @@
       await _supabase.from('shomrim_sos_events').update({ status: 'handled' }).eq('id', currentEventId);
     }
     if (realtimeChannel) _supabase.removeChannel(realtimeChannel);
+    stopPolling();
+    stopLocationUpdates();
+    sessionStorage.removeItem('shomrim_active_sos');
     document.getElementById('statusPanel').classList.remove('active');
     document.getElementById('sosBtn').classList.remove('pulsing');
     currentEventId = null;
