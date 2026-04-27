@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומרים — הורה</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 10px; }
+  .header h2 { color: #1a3c6e; font-size: 20px; }
+  .logout-btn { background: none; border: none; color: #999; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .status-bar { width: 100%; max-width: 440px; background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+  .status-active { color: #006622; font-weight: bold; font-size: 15px; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #00aa44; display: inline-block; margin-left: 6px; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .no-events { text-align: center; color: #aaa; padding: 40px 20px; font-size: 16px; }
+  .no-events .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* כרטיס אירוע */
+  .event-card { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 440px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); margin-bottom: 16px; border-right: 6px solid #ddd; }
+  .event-card.urgency-low { border-right-color: #ffc107; }
+  .event-card.urgency-high { border-right-color: #ff7700; }
+  .event-card.urgency-critical { border-right-color: #cc0000; animation: cardPulse 1.5s infinite; }
+  @keyframes cardPulse { 0%,100% { box-shadow: 0 4px 20px rgba(0,0,0,0.12); } 50% { box-shadow: 0 4px 30px rgba(204,0,0,0.3); } }
+  .event-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .event-urgency { font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
+  .urgency-low .event-urgency { background: #fff9e6; color: #856404; }
+  .urgency-high .event-urgency { background: #fff3e6; color: #7d3c00; }
+  .urgency-critical .event-urgency { background: #fff0f0; color: #cc0000; }
+  .event-time { font-size: 12px; color: #aaa; }
+  .event-child { font-size: 17px; font-weight: bold; color: #1a3c6e; margin-bottom: 8px; }
+  .event-location { font-size: 13px; color: #666; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .event-photo { width: 100%; border-radius: 12px; margin-bottom: 12px; max-height: 200px; object-fit: cover; }
+  .event-actions { display: flex; gap: 10px; }
+  .btn-coming { flex: 2; padding: 14px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn-coming:active { transform: scale(0.98); }
+  .btn-coming.responded { background: #006622; }
+  .btn-map { flex: 1; padding: 14px; background: #f0f4ff; color: #1a3c6e; border: 2px solid #1a3c6e; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
+  .btn-done { flex: 1; padding: 14px; background: #f0fff4; color: #006622; border: 2px solid #006622; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; display: none; }
+
+  /* חיוג מהיר */
+  .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 440px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 8px; }
+  .emergency-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 14px; text-align: center; }
+  .emergency-btns { display: flex; gap: 10px; }
+  .emergency-btn { flex: 1; padding: 14px 8px; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; }
+  .emergency-btn span { font-size: 22px; }
+  .btn-police { background: #e8f0ff; color: #1a3c6e; }
+  .btn-ambulance { background: #fff0f0; color: #cc0000; }
+  .btn-fire { background: #fff5e6; color: #cc5500; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>🛡️ שומרים</h2>
+  <button class="logout-btn" onclick="logout()">יציאה</button>
+</div>
+
+<div class="status-bar">
+  <div class="status-active"><span class="status-dot"></span>פעיל — ממתין לקריאות</div>
+  <div style="font-size:13px; color:#666;">שלום, <span id="userName" style="font-weight:bold"></span></div>
+</div>
+
+<div id="eventsList" style="width:100%; max-width:440px;">
+  <div class="no-events">
+    <div class="icon">🟢</div>
+    <div>אין קריאות פעילות כרגע</div>
+    <div style="font-size:14px; margin-top:8px;">תקבל התראה כשילד קרוב צריך עזרה</div>
+  </div>
+</div>
+
+<div class="emergency-panel">
+  <div class="emergency-title">חיוג מהיר לחירום</div>
+  <div class="emergency-btns">
+    <a href="tel:100" class="emergency-btn btn-police"><span>👮</span>משטרה<br>100</a>
+    <a href="tel:101" class="emergency-btn btn-ambulance"><span>🚑</span>מד"א<br>101</a>
+    <a href="tel:102" class="emergency-btn btn-fire"><span>🚒</span>כיבוי<br>102</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+  const session = getSession();
+  if (!session || session.role !== 'parent') window.location.href = 'index.html';
+  document.getElementById('userName').textContent = session.name.split(' ')[0];
+
+  const respondedEvents = new Set();
+
+  function urgencyLabel(u) {
+    if (u === 'low') return '🟡 בינוני';
+    if (u === 'high') return '🟠 דחוף';
+    return '🔴 חירום';
+  }
+
+  function timeAgo(dateStr) {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'עכשיו';
+    if (diff < 3600) return `לפני ${Math.floor(diff/60)} דקות`;
+    return `לפני ${Math.floor(diff/3600)} שעות`;
+  }
+
+  function getMapUrl(lat, lng) {
+    return `https://www.google.com/maps?q=${lat},${lng}`;
+  }
+
+  async function renderEvents(events) {
+    const list = document.getElementById('eventsList');
+    if (!events || events.length === 0) {
+      list.innerHTML = `<div class="no-events"><div class="icon">🟢</div><div>אין קריאות פעילות כרגע</div><div style="font-size:14px; margin-top:8px;">תקבל התראה כשילד קרוב צריך עזרה</div></div>`;
+      return;
+    }
+    list.innerHTML = '';
+    for (const ev of events) {
+      const { data: childData } = await supabase.from('shomrim_users').select('name').eq('id', ev.child_id).single();
+      const childName = childData ? childData.name : 'ילד לא ידוע';
+      const responded = respondedEvents.has(ev.id);
+      const card = document.createElement('div');
+      card.className = `event-card urgency-${ev.urgency}`;
+      card.id = `event-${ev.id}`;
+      card.innerHTML = `
+        <div class="event-header">
+          <div class="event-urgency">${urgencyLabel(ev.urgency)}</div>
+          <div class="event-time">${timeAgo(ev.created_at)}</div>
+        </div>
+        <div class="event-child">🧒 ${childName}</div>
+        <div class="event-location">📍 ${ev.lat && ev.lng ? `${ev.lat.toFixed(4)}, ${ev.lng.toFixed(4)}` : 'מיקום לא זמין'}</div>
+        ${ev.photo_url ? `<img class="event-photo" src="${ev.photo_url}">` : ''}
+        <div class="event-actions">
+          <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)">
+            ${responded ? '✅ אני בדרך' : '🚗 אני בדרך!'}
+          </button>
+          ${ev.lat && ev.lng ? `<a href="${getMapUrl(ev.lat, ev.lng)}" target="_blank" class="btn-map">🗺️ מפה</a>` : ''}
+          <button class="btn-done" id="doneBtn-${ev.id}" style="${responded ? 'display:flex' : 'display:none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
+        </div>`;
+      list.appendChild(card);
+    }
+  }
+
+  async function respondToEvent(eventId, btn) {
+    if (respondedEvents.has(eventId)) return;
+    respondedEvents.add(eventId);
+    btn.textContent = '✅ אני בדרך';
+    btn.classList.add('responded');
+    document.getElementById(`doneBtn-${eventId}`).style.display = 'flex';
+    await supabase.from('shomrim_responders').insert([{
+      event_id: eventId,
+      parent_id: session.id,
+      status: 'coming'
+    }]);
+  }
+
+  async function markDone(eventId) {
+    await supabase.from('shomrim_responders')
+      .update({ status: 'done' })
+      .eq('event_id', eventId)
+      .eq('parent_id', session.id);
+    await supabase.from('shomrim_sos_events')
+      .update({ status: 'handled' })
+      .eq('id', eventId);
+    document.getElementById(`event-${eventId}`).remove();
+    const remaining = document.querySelectorAll('.event-card');
+    if (remaining.length === 0) renderEvents([]);
+  }
+
+  async function loadEvents() {
+    const { data } = await supabase
+      .from('shomrim_sos_events')
+      .select('*')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false });
+    renderEvents(data);
+  }
+
+  // האזנה בזמן אמת לאירועים חדשים
+  supabase.channel('sos_events')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'shomrim_sos_events'
+    }, () => loadEvents())
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'shomrim_sos_events'
+    }, () => loadEvents())
+    .subscribe();
+
+  loadEvents();
+</script>
+</body>
+</html>
