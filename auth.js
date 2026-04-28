@@ -11,7 +11,7 @@ async function doLogin() {
     .eq('pin', pin)
     .single();
   if (error || !data) return showError('loginError', 'טלפון או PIN שגויים');
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   if (data.role === ROLES.CHILD) {
     window.location.href = 'child.html';
   } else {
@@ -75,17 +75,18 @@ async function doRegister() {
       }]);
     }
   }
- showSuccess('registerSuccess', '✅ נרשמת בהצלחה! כעת תוכל/י להתחבר');
-  setTimeout(() => {
-    showTab('login');
-    document.getElementById('loginPhone').value = phone;
-  }, 2000);
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  if (data.role === ROLES.CHILD) {
+    window.location.href = 'child.html';
+  } else {
+    window.location.href = 'parent.html';
+  }
 }
 function getSession() {
-  const s = sessionStorage.getItem(SESSION_KEY);
+  const s = localStorage.getItem(SESSION_KEY);
   return s ? JSON.parse(s) : null;
 }
 function logout() {
-  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
   window.location.href = 'index.html';
 }
