@@ -21,10 +21,12 @@
   @keyframes pulse { 0%, 100% { box-shadow: 0 8px 30px rgba(204,0,0,0.4); } 50% { box-shadow: 0 8px 50px rgba(204,0,0,0.8), 0 0 0 20px rgba(204,0,0,0.1); } }
   .sos-btn span { font-size: 16px; font-weight: normal; }
 
-  /* רמת דחיפות */
-  .urgency-panel { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
-  .urgency-panel.active { display: block; }
-  .urgency-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
+  /* פאנלים */
+  .panel { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
+  .panel.active { display: block; }
+  .panel-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
+
+  /* רמות דחיפות */
   .urgency-btns { display: flex; flex-direction: column; gap: 12px; }
   .urgency-btn { padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: all 0.2s; display: flex; align-items: center; gap: 12px; }
   .urgency-btn:active { transform: scale(0.98); }
@@ -33,10 +35,20 @@
   .urgency-critical { background: #fff0f0; color: #cc0000; border: 2px solid #ff0000; }
   .urgency-icon { font-size: 24px; }
 
+  /* ספירה לאחור */
+  .countdown-circle { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #cc0000; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #cc0000; margin: 0 auto 16px; }
+  .countdown-text { text-align: center; font-size: 15px; color: #666; margin-bottom: 20px; }
+  .btn-cancel-big { width: 100%; padding: 16px; background: white; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; font-weight: bold; color: #666; cursor: pointer; font-family: inherit; }
+
+  /* פאנל ויכוח */
+  .dispute-textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; resize: none; height: 80px; margin-bottom: 12px; outline: none; }
+  .dispute-textarea:focus { border-color: #ffc107; }
+  .btn-ai { width: 100%; padding: 14px; background: #fff9e6; border: 2px solid #ffc107; border-radius: 12px; font-size: 15px; font-weight: bold; color: #856404; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+  .btn-mediation { width: 100%; padding: 14px; background: #f0f4ff; border: 2px solid #1a3c6e; border-radius: 12px; font-size: 15px; font-weight: bold; color: #1a3c6e; cursor: pointer; font-family: inherit; }
+  .ai-response { background: #fff9e6; border-radius: 12px; padding: 14px; font-size: 14px; color: #555; line-height: 1.6; margin-top: 12px; display: none; }
+  .ai-loading { text-align: center; color: #aaa; font-size: 14px; display: none; }
+
   /* תמונה */
-  .photo-panel { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
-  .photo-panel.active { display: block; }
-  .photo-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 16px; text-align: center; }
   .photo-btns { display: flex; gap: 12px; }
   .photo-btn { flex: 1; padding: 16px; border: 2px solid #1a3c6e; border-radius: 12px; background: white; color: #1a3c6e; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; }
   .photo-skip { flex: 1; padding: 16px; border: 2px solid #1a3c6e; border-radius: 12px; background: white; color: #1a3c6e; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; }
@@ -51,6 +63,21 @@
   .status-sub { font-size: 15px; color: #666; margin-bottom: 20px; }
   .responders-count { font-size: 32px; font-weight: bold; color: #cc0000; }
   .cancel-btn { padding: 12px 24px; border: 2px solid #ddd; border-radius: 12px; background: white; color: #999; font-size: 15px; cursor: pointer; font-family: inherit; margin-top: 16px; }
+
+  /* מסך נעילה */
+  .locked-panel { background: white; border-radius: 20px; padding: 40px 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; display: none; }
+  .locked-panel.active { display: block; }
+  .locked-icon { font-size: 72px; margin-bottom: 16px; }
+  .locked-title { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 12px; }
+  .locked-text { font-size: 15px; color: #666; line-height: 1.7; margin-bottom: 30px; }
+  .locked-emergency { background: #fff0f0; border-radius: 16px; padding: 16px; margin-bottom: 8px; }
+  .locked-emergency-title { font-size: 14px; color: #cc0000; font-weight: bold; margin-bottom: 12px; }
+  .locked-btns { display: flex; gap: 10px; }
+  .locked-btn { flex: 1; padding: 12px 8px; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; }
+  .locked-btn span { font-size: 20px; }
+  .lb-police { background: #e8f0ff; color: #1a3c6e; }
+  .lb-ambulance { background: #fff0f0; color: #cc0000; }
+  .lb-fire { background: #fff5e6; color: #cc5500; }
 
   /* חיוג מהיר */
   .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
@@ -72,36 +99,69 @@
 
 <div class="welcome">שלום, <span id="userName">—</span></div>
 
+<!-- מסך נעילה -->
+<div class="locked-panel" id="lockedPanel">
+  <div class="locked-icon">🔒</div>
+  <div class="locked-title">החשבון שלך נעול זמנית</div>
+  <div class="locked-text">שלחת שתי קריאות שלא היו אמיתיות.<br>כדי לפתוח את החשבון — ההורה שלך צריך לאשר.</div>
+  <div class="locked-emergency">
+    <div class="locked-emergency-title">אם אתה זקוק לעזרה אמיתית עכשיו — חייג ישירות:</div>
+    <div class="locked-btns">
+      <a href="tel:100" class="locked-btn lb-police"><span>👮</span>משטרה<br>100</a>
+      <a href="tel:101" class="locked-btn lb-ambulance"><span>🚑</span>מד"א<br>101</a>
+      <a href="tel:102" class="locked-btn lb-fire"><span>🚒</span>כיבוי<br>102</a>
+    </div>
+  </div>
+</div>
+
 <!-- כפתור SOS -->
-<div class="sos-container">
+<div class="sos-container" id="sosContainer">
   <button class="sos-btn" id="sosBtn" onclick="startSOS()">
     🆘
     <span>לחץ לעזרה</span>
   </button>
 </div>
 
-<!-- בחירת דחיפות -->
-<div class="urgency-panel" id="urgencyPanel">
-  <div class="urgency-title">מה רמת הדחיפות?</div>
+<!-- בחירת סוג המצב -->
+<div class="panel" id="urgencyPanel">
+  <div class="panel-title">מה קורה?</div>
   <div class="urgency-btns">
     <button class="urgency-btn urgency-low" onclick="selectUrgency('low')">
       <span class="urgency-icon">🟡</span>
-      בינוני — מצב לא נעים
+      ויכוח, אי הבנה
     </button>
     <button class="urgency-btn urgency-high" onclick="selectUrgency('high')">
       <span class="urgency-icon">🟠</span>
-      דחוף — צריך עזרה מיד
+      מישהו מאיים או מפחיד בסביבתי
     </button>
     <button class="urgency-btn urgency-critical" onclick="selectUrgency('critical')">
       <span class="urgency-icon">🔴</span>
-      חירום — סכנת חיים
+      יש מחלוקת, מישהו עלול להיפגע
     </button>
   </div>
 </div>
 
+<!-- פאנל ויכוח — AI -->
+<div class="panel" id="disputePanel">
+  <div class="panel-title">🟡 ספר מה קרה</div>
+  <textarea class="dispute-textarea" id="disputeText" placeholder="תאר בקצרה מה קרה..."></textarea>
+  <button class="btn-ai" onclick="askAI()">💡 קבל עצה</button>
+  <button class="btn-mediation" onclick="startMediation()">🤝 בוררות — שני הצדדים מספרים</button>
+  <div class="ai-loading" id="aiLoading">⏳ חושב...</div>
+  <div class="ai-response" id="aiResponse"></div>
+</div>
+
+<!-- ספירה לאחור -->
+<div class="panel" id="countdownPanel">
+  <div class="panel-title">בטוח שצריך עזרה?</div>
+  <div class="countdown-circle" id="countdownNum">10</div>
+  <div class="countdown-text">הקריאה תישלח בעוד כמה שניות...<br>אפשר לבטל עכשיו</div>
+  <button class="btn-cancel-big" onclick="cancelCountdown()">❌ ביטול — הכל בסדר</button>
+</div>
+
 <!-- תמונה -->
-<div class="photo-panel" id="photoPanel">
-  <div class="photo-title">📸 רוצה לצלם תמונה?</div>
+<div class="panel" id="photoPanel">
+  <div class="panel-title">📸 רוצה לצלם תמונה?</div>
   <div class="photo-btns">
     <button class="photo-btn" onclick="takePhoto()">📷 צלם תמונה</button>
     <button class="photo-skip" onclick="sendSOS(null)">דלג ושלח עכשיו</button>
@@ -122,7 +182,7 @@
 </div>
 
 <!-- חיוג מהיר -->
-<div class="emergency-panel">
+<div class="emergency-panel" id="emergencyPanel">
   <div class="emergency-title">חיוג מהיר לחירום</div>
   <div class="emergency-btns">
     <a href="tel:100" class="emergency-btn btn-police"><span>👮</span>משטרה<br>100</a>
@@ -139,11 +199,20 @@
   let currentUrgency = null;
   let currentEventId = null;
   let realtimeChannel = null;
+  let countdownTimer = null;
+  let countdownSeconds = 10;
 
-  // בדיקת session
   const session = getSession();
   if (!session || session.role !== 'child') window.location.href = 'index.html';
   document.getElementById('userName').textContent = session.name.split(' ')[0];
+
+  // בדיקת נעילה
+  const falseAlarms = parseInt(localStorage.getItem('shomrim_false_alarms_' + session.id) || '0');
+  if (falseAlarms >= 2) {
+    document.getElementById('lockedPanel').classList.add('active');
+    document.getElementById('sosContainer').style.display = 'none';
+    document.getElementById('emergencyPanel').style.display = 'none';
+  }
 
   // בדיקת קריאה פתוחה בטעינת הדף
   checkActiveEvent(session);
@@ -156,7 +225,86 @@
   function selectUrgency(level) {
     currentUrgency = level;
     document.getElementById('urgencyPanel').classList.remove('active');
-    document.getElementById('photoPanel').classList.add('active');
+    if (level === 'low') {
+      document.getElementById('disputePanel').classList.add('active');
+    } else {
+      startCountdown();
+    }
+  }
+
+  function startCountdown() {
+    countdownSeconds = 10;
+    document.getElementById('countdownNum').textContent = countdownSeconds;
+    document.getElementById('countdownPanel').classList.add('active');
+    countdownTimer = setInterval(() => {
+      countdownSeconds--;
+      document.getElementById('countdownNum').textContent = countdownSeconds;
+      if (countdownSeconds <= 0) {
+        clearInterval(countdownTimer);
+        document.getElementById('countdownPanel').classList.remove('active');
+        document.getElementById('photoPanel').classList.add('active');
+      }
+    }, 1000);
+  }
+
+  function cancelCountdown() {
+    clearInterval(countdownTimer);
+    document.getElementById('countdownPanel').classList.remove('active');
+    document.getElementById('sosBtn').classList.remove('pulsing');
+    currentUrgency = null;
+  }
+
+  async function askAI() {
+    const text = document.getElementById('disputeText').value.trim();
+    if (!text) return;
+    document.getElementById('aiLoading').style.display = 'block';
+    document.getElementById('aiResponse').style.display = 'none';
+    try {
+      const res = await fetch('https://sn-ai-proxy.shirit-coach.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-opus-4-5',
+          max_tokens: 300,
+          messages: [{ role: 'user', content: `אתה יועץ לילדים ונוער. ילד פנה אליך עם הסיפור הבא: "${text}". תן עצה קצרה, חמה ומעשית בעברית פשוטה. לא יותר מ-3 משפטים.` }]
+        })
+      });
+      const data = await res.json();
+      const answer = data.content?.[0]?.text || 'לא הצלחתי לעבד את הבקשה.';
+      document.getElementById('aiResponse').textContent = answer;
+      document.getElementById('aiResponse').style.display = 'block';
+    } catch (e) {
+      document.getElementById('aiResponse').textContent = 'שגיאה בחיבור. נסה שוב.';
+      document.getElementById('aiResponse').style.display = 'block';
+    }
+    document.getElementById('aiLoading').style.display = 'none';
+  }
+
+  function startMediation() {
+    const text = document.getElementById('disputeText').value.trim();
+    if (!text) { alert('כתוב קודם מה קרה מהצד שלך'); return; }
+    const side2 = prompt('עכשיו הצד השני — מה הסיפור שלך?');
+    if (!side2) return;
+    document.getElementById('aiLoading').style.display = 'block';
+    document.getElementById('aiResponse').style.display = 'none';
+    fetch('https://sn-ai-proxy.shirit-coach.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: `אתה מגשר לילדים. יש ויכוח בין שני ילדים. צד א אמר: "${text}". צד ב אמר: "${side2}". תן פסיקה קצרה, הוגנת וחמה בעברית פשוטה. לא יותר מ-4 משפטים.` }]
+      })
+    }).then(r => r.json()).then(data => {
+      const answer = data.content?.[0]?.text || 'לא הצלחתי לעבד.';
+      document.getElementById('aiResponse').textContent = '🤝 פסיקת הבורר: ' + answer;
+      document.getElementById('aiResponse').style.display = 'block';
+      document.getElementById('aiLoading').style.display = 'none';
+    }).catch(() => {
+      document.getElementById('aiResponse').textContent = 'שגיאה בחיבור.';
+      document.getElementById('aiResponse').style.display = 'block';
+      document.getElementById('aiLoading').style.display = 'none';
+    });
   }
 
   function takePhoto() {
@@ -201,7 +349,7 @@
     if (realtimeChannel) _supabase.removeChannel(realtimeChannel);
     stopPolling();
     stopLocationUpdates();
-    sessionStorage.removeItem('shomrim_active_sos');
+    localStorage.removeItem('shomrim_active_sos');
     document.getElementById('statusPanel').classList.remove('active');
     document.getElementById('sosBtn').classList.remove('pulsing');
     currentEventId = null;
