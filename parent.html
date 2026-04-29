@@ -37,6 +37,7 @@
   .btn-coming:active { transform: scale(0.98); }
   .btn-coming.responded { background: #006622; }
   .btn-map { flex: 1; padding: 14px; background: #f0f4ff; color: #1a3c6e; border: 2px solid #1a3c6e; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
+  .btn-nav { flex: 1; padding: 14px; background: #e8f5e9; color: #1b5e20; border: 2px solid #43a047; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
   .btn-done { flex: 1; padding: 14px; background: #f0fff4; color: #006622; border: 2px solid #006622; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; display: none; }
 
   /* חיוג מהיר */
@@ -94,10 +95,12 @@
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=he`);
       const data = await res.json();
       const a = data.address;
-      const road = a.road || a.pedestrian || a.suburb || '';
+      const road = a.road || a.pedestrian || a.footway || a.suburb || '';
       const house = a.house_number ? ' ' + a.house_number : '';
+      const quarter = a.quarter || a.neighbourhood || '';
       const city = a.city || a.town || a.village || '';
-      return `${road}${house}${city ? ', ' + city : ''}` || 'כתובת לא זמינה';
+      const parts = [road + house, quarter, city].filter(p => p.trim() !== '');
+      return parts.join(', ') || 'כתובת לא זמינה';
     } catch (e) {
       return 'כתובת לא זמינה';
     }
@@ -118,6 +121,10 @@
 
   function getMapUrl(lat, lng) {
     return `https://www.google.com/maps?q=${lat},${lng}`;
+  }
+
+  function getWazeUrl(lat, lng) {
+    return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
   }
 
   async function renderEvents(events) {
@@ -147,6 +154,7 @@
           <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)">
             ${responded ? '✅ אני בדרך' : '🚗 אני בדרך!'}
           </button>
+          ${ev.lat && ev.lng ? `<a href="${getWazeUrl(ev.lat, ev.lng)}" target="_blank" class="btn-nav">🧭 נווט</a>` : ''}
           ${ev.lat && ev.lng ? `<a href="${getMapUrl(ev.lat, ev.lng)}" target="_blank" class="btn-map">🗺️ מפה</a>` : ''}
           <button class="btn-done" id="doneBtn-${ev.id}" style="${responded ? 'display:flex' : 'display:none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
         </div>`;
