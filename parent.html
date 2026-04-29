@@ -39,6 +39,7 @@
   .btn-map { flex: 1; padding: 14px; background: #f0f4ff; color: #1a3c6e; border: 2px solid #1a3c6e; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
   .btn-nav { flex: 1; padding: 14px; background: #e8f5e9; color: #1b5e20; border: 2px solid #43a047; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
   .btn-done { flex: 1; padding: 14px; background: #f0fff4; color: #006622; border: 2px solid #006622; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; display: none; }
+  .btn-skip { flex: 1; padding: 14px; background: #f5f5f5; color: #999; border: 2px solid #ddd; border-radius: 12px; font-size: 13px; cursor: pointer; font-family: inherit; text-align: center; display: flex; align-items: center; justify-content: center; }
 
   /* חיוג מהיר */
   .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 440px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 8px; }
@@ -154,12 +155,18 @@
           <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)">
             ${responded ? '✅ אני בדרך' : '🚗 אני בדרך!'}
           </button>
+          ${!responded ? `<button class="btn-skip" onclick="skipEvent('${ev.id}')">🙏 לא יכול<br>כרגע</button>` : ''}
           ${ev.lat && ev.lng ? `<a href="${getWazeUrl(ev.lat, ev.lng)}" target="_blank" class="btn-nav">🧭 נווט</a>` : ''}
           ${ev.lat && ev.lng ? `<a href="${getMapUrl(ev.lat, ev.lng)}" target="_blank" class="btn-map">🗺️ מפה</a>` : ''}
           <button class="btn-done" id="doneBtn-${ev.id}" style="${responded ? 'display:flex' : 'display:none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
         </div>`;
       list.appendChild(card);
     }
+  }
+
+  function skipEvent(eventId) {
+    const card = document.getElementById(`event-${eventId}`);
+    if (card) card.style.display = 'none';
   }
 
   async function respondToEvent(eventId, btn) {
