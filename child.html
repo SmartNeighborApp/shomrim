@@ -227,6 +227,8 @@
     document.getElementById('urgencyPanel').classList.remove('active');
     if (level === 'low') {
       document.getElementById('disputePanel').classList.add('active');
+    } else if (level === 'critical') {
+      document.getElementById('photoPanel').classList.add('active');
     } else {
       startCountdown();
     }
