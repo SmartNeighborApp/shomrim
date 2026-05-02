@@ -3,16 +3,35 @@
 let pollingInterval = null;
 
 async function triggerSOS(session, urgency, photoFile) {
-  // קבלת מיקום
+  // קבלת מיקום — 3 ניסיונות
   let lat = null, lng = null;
   try {
+    // ניסיון 1 — GPS מדויק, 15 שניות
     const pos = await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 15000, enableHighAccuracy: true })
     );
     lat = pos.coords.latitude;
     lng = pos.coords.longitude;
   } catch (e) {
-    console.warn('מיקום לא זמין:', e);
+    try {
+      // ניסיון 2 — מיקום אחרון שמור בזיכרון הטלפון (עד דקה ישן)
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false })
+      );
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+    } catch (e2) {
+      try {
+        // ניסיון 3 — רשת סלולרית/wifi, דיוק נמוך אבל עובד בפנים בניין
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 300000, enableHighAccuracy: false })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch (e3) {
+        console.warn('מיקום לא זמין לאחר 3 ניסיונות:', e3);
+      }
+    }
   }
 
   // העלאת תמונה אם יש
