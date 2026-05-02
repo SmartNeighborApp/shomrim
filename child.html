@@ -63,6 +63,12 @@
   .status-sub { font-size: 15px; color: #666; margin-bottom: 20px; }
   .responders-count { font-size: 32px; font-weight: bold; color: #cc0000; }
   .cancel-btn { padding: 12px 24px; border: 2px solid #ddd; border-radius: 12px; background: white; color: #999; font-size: 15px; cursor: pointer; font-family: inherit; margin-top: 16px; }
+  .responders-list { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .responder-item { display: flex; align-items: center; gap: 12px; background: #f0fff4; border-radius: 12px; padding: 10px 14px; }
+  .responder-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #00aa44; background: #e0e0e0; }
+  .responder-avatar-placeholder { width: 44px; height: 44px; border-radius: 50%; background: #1a3c6e; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; flex-shrink: 0; }
+  .responder-name { font-size: 15px; font-weight: bold; color: #006622; }
+  .responder-status { font-size: 13px; color: #aaa; }
 
   /* מסך נעילה */
   .locked-panel { background: white; border-radius: 20px; padding: 40px 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; display: none; }
@@ -175,9 +181,10 @@
 <div class="status-panel" id="statusPanel">
   <div class="status-icon">🔴</div>
   <div class="status-text">קריאת SOS נשלחה!</div>
-  <div class="status-sub">מחפש הורים קרובים...</div>
+  <div class="status-sub" id="statusSub">מחפש הורים קרובים...</div>
   <div class="responders-count" id="respondersCount">0</div>
   <div style="font-size:15px; color:#666;">הורים בדרך אליך</div>
+  <div class="responders-list" id="respondersList"></div>
   <button class="cancel-btn" onclick="cancelSOS()">ביטול — הכל בסדר</button>
 </div>
 
@@ -337,10 +344,30 @@
     await triggerSOS(session, currentUrgency, photoFile);
   }
 
-  function updateResponders(count) {
+  async function updateResponders(count) {
     document.getElementById('respondersCount').textContent = count;
     if (count > 0) {
-      document.querySelector('.status-sub').textContent = 'הורים בדרך אליך! 💪';
+      document.getElementById('statusSub').textContent = 'הורים בדרך אליך! 💪';
+    }
+    if (currentEventId) {
+      const { data: responders } = await _supabase
+        .from('shomrim_responders')
+        .select('parent_name, parent_photo')
+        .eq('event_id', currentEventId)
+        .eq('status', 'coming');
+      const list = document.getElementById('respondersList');
+      list.innerHTML = '';
+      if (responders && responders.length > 0) {
+        responders.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'responder-item';
+          const avatar = r.parent_photo
+            ? `<img class="responder-avatar" src="${r.parent_photo}">`
+            : `<div class="responder-avatar-placeholder">${(r.parent_name || '?')[0]}</div>`;
+          item.innerHTML = `${avatar}<div><div class="responder-name">${r.parent_name || 'הורה'}</div><div class="responder-status">🚗 בדרך אליך</div></div>`;
+          list.appendChild(item);
+        });
+      }
     }
   }
 
