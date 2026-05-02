@@ -37,6 +37,14 @@ async function doRegister() {
     const declared = document.getElementById('regDeclare').checked;
     if (!idNumber || idNumber.length !== 9) return showError('registerError', 'יש למלא תעודת זהות תקינה');
     if (!declared) return showError('registerError', 'יש לאשר את ההצהרה');
+    const agr1 = document.getElementById('agr1').checked;
+    const agr2 = document.getElementById('agr2').checked;
+    const agr3 = document.getElementById('agr3').checked;
+    const agr4 = document.getElementById('agr4').checked;
+    const agr5 = document.getElementById('agr5').checked;
+    if (!agr1 || !agr2 || !agr3 || !agr4 || !agr5) return showError('registerError', 'יש לאשר את כל סעיפי ההסכם');
+    const agreementName = document.getElementById('agreementName').value.trim();
+    if (!agreementName) return showError('registerError', 'יש לכתוב שם מלא לאישור ההסכם');
   }
   const { data: existing } = await _supabase
     .from('shomrim_users')
@@ -77,6 +85,8 @@ async function doRegister() {
     photo_url,
     school_name,
     class_name,
+    agreement_signed: role === ROLES.PARENT ? true : false,
+    agreement_name: role === ROLES.PARENT ? document.getElementById('agreementName').value.trim() : null,
     is_verified: false
   };
   const { data, error } = await _supabase
