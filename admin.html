@@ -389,8 +389,22 @@
       <div class="page-header"><div class="page-title">📄 דוחות</div></div>
       <div class="list-card">
         <div style="margin-bottom:20px;">
-          <div style="font-size:15px; font-weight:700; color:var(--blue); margin-bottom:8px;">דוח חודשי</div>
-          <div style="font-size:13px; color:var(--text-soft); margin-bottom:16px;">דוח מלא של כל האירועים, הורים ופעולות — מוכן להדפסה</div>
+          <div style="font-size:15px; font-weight:700; color:var(--blue); margin-bottom:14px;">בחר תקופה לדוח</div>
+          <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:2px solid var(--gray-mid); border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; transition:all 0.2s;" id="rLabel-month">
+              <input type="radio" name="reportPeriod" value="month" checked onchange="updateReportLabel()" style="accent-color:var(--blue);">
+              📅 חודשי
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:2px solid var(--gray-mid); border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; transition:all 0.2s;" id="rLabel-quarter">
+              <input type="radio" name="reportPeriod" value="quarter" onchange="updateReportLabel()" style="accent-color:var(--blue);">
+              📊 רבעוני
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:2px solid var(--gray-mid); border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; transition:all 0.2s;" id="rLabel-year">
+              <input type="radio" name="reportPeriod" value="year" onchange="updateReportLabel()" style="accent-color:var(--blue);">
+              📆 שנתי
+            </label>
+          </div>
+          <div style="font-size:13px; color:var(--text-soft); margin-bottom:16px;" id="reportDesc">דוח מלא של כל האירועים, הורים ופעולות עבור החודש הנוכחי — מוכן להדפסה</div>
           <button class="btn-export" onclick="exportReport()">📄 הפק דוח HTML להדפסה</button>
         </div>
       </div>
@@ -835,17 +849,38 @@
   }
 
   // ===== ייצוא דוח HTML =====
+  function updateReportLabel() {
+    const period = document.querySelector('input[name="reportPeriod"]:checked').value;
+    const descs = {
+      month: 'דוח מלא של כל האירועים, הורים ופעולות עבור החודש הנוכחי — מוכן להדפסה',
+      quarter: 'דוח של 3 החודשים האחרונים — מוכן להדפסה',
+      year: 'דוח שנתי מלא של כל האירועים והפעילות — מוכן להדפסה'
+    };
+    document.getElementById('reportDesc').textContent = descs[period];
+  }
+
   async function exportReport() {
     const now = new Date();
-    const firstMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const { data: events } = await _supabase.from('shomrim_sos_events').select('*, shomrim_users!child_id(name)').eq('school_name', adminSchool).gte('created_at', firstMonth).order('created_at', { ascending: false });
+    const period = document.querySelector('input[name="reportPeriod"]:checked')?.value || 'month';
+    let fromDate, periodLabel;
+    if (period === 'month') {
+      fromDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      periodLabel = now.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+    } else if (period === 'quarter') {
+      fromDate = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString();
+      periodLabel = '3 חודשים אחרונים';
+    } else {
+      fromDate = new Date(now.getFullYear(), 0, 1).toISOString();
+      periodLabel = `שנת ${now.getFullYear()}`;
+    }
+    const { data: events } = await _supabase.from('shomrim_sos_events').select('*, shomrim_users!child_id(name)').eq('school_name', adminSchool).gte('created_at', fromDate).order('created_at', { ascending: false });
     const { data: parents } = await _supabase.from('shomrim_users').select('*').eq('role', 'parent').eq('is_verified', true).eq('school_name', adminSchool);
     const icons = { low: '🟡', high: '🟠', critical: '🔴', pickup: '🕐' };
     const html = `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>דוח שומרים — ${adminSchool} — ${now.toLocaleDateString('he-IL')}</title>
+<title>דוח שומרים — ${adminSchool} — ${periodLabel}</title>
 <style>
   body { font-family: Arial, sans-serif; padding: 40px; color: #1e2a3a; direction: rtl; }
   h1 { color: #1a3c6e; border-bottom: 3px solid #1a3c6e; padding-bottom: 10px; }
@@ -860,13 +895,13 @@
 </head>
 <body>
 <h1>🛡️ דוח שומרים — ${adminSchool}</h1>
-<p>תאריך: ${now.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+<p>תקופה: ${periodLabel} · הופק: ${now.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
 <div style="margin:20px 0;">
   <span class="stat">👥 הורים פעילים: ${parents?.length || 0}</span>
-  <span class="stat">📋 אירועים החודש: ${events?.length || 0}</span>
+  <span class="stat">📋 אירועים בתקופה: ${events?.length || 0}</span>
   <span class="stat">🔴 חירום: ${events?.filter(e=>e.urgency==='critical').length || 0}</span>
 </div>
-<h2>📋 אירועים החודש</h2>
+<h2>📋 אירועים — ${periodLabel}</h2>
 <table>
   <tr><th>תאריך</th><th>ילד</th><th>רמה</th><th>כתובת</th><th>סטטוס</th></tr>
   ${(events||[]).map(e => {
