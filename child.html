@@ -106,6 +106,11 @@
   /* toast תודה לילד */
   .child-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1a3c6e; color: white; padding: 14px 24px; border-radius: 16px; font-size: 15px; font-weight: bold; z-index: 2000; display: none; text-align: center; max-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
 
+  /* באנר כוננות מוגברת */
+  .alert-banner { width: 100%; max-width: 400px; background: #fff3e6; border: 2px solid #ff7700; border-radius: 16px; padding: 14px 18px; margin-bottom: 16px; display: none; text-align: center; }
+  .alert-banner-title { font-size: 15px; font-weight: bold; color: #cc5500; margin-bottom: 4px; }
+  .alert-banner-msg { font-size: 13px; color: #7d3c00; }
+
   /* חיוג מהיר */
   .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .emergency-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 14px; text-align: center; }
@@ -139,6 +144,12 @@
       <a href="tel:102" class="locked-btn lb-fire"><span>🚒</span>כיבוי<br>102</a>
     </div>
   </div>
+</div>
+
+<!-- באנר כוננות מוגברת -->
+<div class="alert-banner" id="alertBanner">
+  <div class="alert-banner-title">⚠️ כוננות מוגברת</div>
+  <div class="alert-banner-msg" id="alertBannerMsg"></div>
 </div>
 
 <!-- כפתור SOS -->
@@ -274,6 +285,21 @@
 
   // בדיקת קריאה פתוחה בטעינת הדף
   checkActiveEvent(session);
+
+  // בדיקת כוננות מוגברת
+  (async () => {
+    if (!session.school_name) return;
+    const { data: alert } = await _supabase
+      .from('shomrim_alert_modes')
+      .select('*')
+      .eq('school_name', session.school_name)
+      .eq('active', true)
+      .maybeSingle();
+    if (alert) {
+      document.getElementById('alertBanner').style.display = 'block';
+      document.getElementById('alertBannerMsg').textContent = alert.message || 'היום יש כוננות מוגברת — הורים פעילים בסביבה';
+    }
+  })();
 
   function startSOS() {
     document.getElementById('urgencyPanel').classList.add('active');
