@@ -178,7 +178,9 @@
     await _supabase.from('shomrim_responders').insert([{
       event_id: eventId,
       parent_id: session.id,
-      status: 'coming'
+      status: 'coming',
+      parent_name: session.name,
+      parent_photo: session.photo_url || null
     }]);
   }
 
