@@ -41,6 +41,21 @@
   .btn-done { flex: 1; padding: 14px; background: #f0fff4; color: #006622; border: 2px solid #006622; border-radius: 12px; font-size: 15px; cursor: pointer; font-family: inherit; display: none; }
   .btn-skip { flex: 1; padding: 14px; background: #f5f5f5; color: #999; border: 2px solid #ddd; border-radius: 12px; font-size: 13px; cursor: pointer; font-family: inherit; text-align: center; display: flex; align-items: center; justify-content: center; }
 
+  /* מסך תיעוד סוף אירוע */
+  .resolution-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .resolution-overlay.active { display: flex; }
+  .resolution-box { background: white; border-radius: 20px; padding: 28px; width: 100%; max-width: 400px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+  .resolution-title { font-size: 18px; font-weight: bold; color: #1a3c6e; margin-bottom: 6px; text-align: center; }
+  .resolution-sub { font-size: 14px; color: #888; text-align: center; margin-bottom: 20px; }
+  .resolution-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .res-btn { padding: 14px 16px; border: 2px solid #ddd; border-radius: 12px; background: white; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: right; transition: all 0.2s; }
+  .res-btn.selected { border-color: #1a3c6e; background: #f0f4ff; }
+  .resolution-note { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 100px; outline: none; margin-bottom: 16px; }
+  .resolution-note:focus { border-color: #1a3c6e; }
+  .btn-save-resolution { width: 100%; padding: 16px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn-save-resolution:active { transform: scale(0.98); }
+  .thanks-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1a3c6e; color: white; padding: 14px 24px; border-radius: 16px; font-size: 15px; font-weight: bold; z-index: 2000; display: none; text-align: center; max-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+
   /* חיוג מהיר */
   .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 440px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 8px; }
   .emergency-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 14px; text-align: center; }
@@ -80,6 +95,25 @@
     <a href="tel:102" class="emergency-btn btn-fire"><span>🚒</span>כיבוי<br>102</a>
   </div>
 </div>
+
+<!-- מסך תיעוד סוף אירוע -->
+<div class="resolution-overlay" id="resolutionOverlay">
+  <div class="resolution-box">
+    <div class="resolution-title">📋 מה קרה?</div>
+    <div class="resolution-sub">תיעוד קצר לפני סגירת האירוע</div>
+    <div class="resolution-btns">
+      <button class="res-btn" onclick="selectResolution(this, 'ok')">🟢 הכל בסדר — הרגעתי את המצב</button>
+      <button class="res-btn" onclick="selectResolution(this, 'dispute')">🟡 ויכוח שנפתר</button>
+      <button class="res-btn" onclick="selectResolution(this, 'help')">🟠 הזעקתי עזרה נוספת</button>
+      <button class="res-btn" onclick="selectResolution(this, 'police')">🔴 קראתי למשטרה / מד"א</button>
+    </div>
+    <textarea class="resolution-note" id="resolutionNote" placeholder="הערות נוספות (אופציונלי)..."></textarea>
+    <button class="btn-save-resolution" onclick="saveResolution()">שמור וסגור ✅</button>
+  </div>
+</div>
+
+<!-- toast תודה -->
+<div class="thanks-toast" id="thanksToast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -184,17 +218,53 @@
     }]);
   }
 
+  const THANKS_MSGS = [
+    'תודה שהגעת. עשית את ההבדל היום. 🌟',
+    'בגללך ילד חזר הביתה בשלום.',
+    'שומר אמיתי. תודה על הלב הגדול.',
+    'הקהילה חזקה בגללך.',
+    'הגעת. זה הכל שצריך.',
+    'גיבור שקט של הקהילה — תודה.'
+  ];
+
+  let currentResolutionEventId = null;
+  let selectedResolutionType = null;
+
+  function selectResolution(btn, type) {
+    document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedResolutionType = type;
+  }
+
   async function markDone(eventId) {
+    currentResolutionEventId = eventId;
+    selectedResolutionType = null;
+    document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('resolutionNote').value = '';
+    document.getElementById('resolutionOverlay').classList.add('active');
+  }
+
+  async function saveResolution() {
+    const eventId = currentResolutionEventId;
+    const note = document.getElementById('resolutionNote').value.trim();
+    const type = selectedResolutionType;
+    document.getElementById('resolutionOverlay').classList.remove('active');
     await _supabase.from('shomrim_responders')
       .update({ status: 'done' })
       .eq('event_id', eventId)
       .eq('parent_id', session.id);
     await _supabase.from('shomrim_sos_events')
-      .update({ status: 'handled' })
+      .update({ status: 'handled', resolution_type: type, resolution_note: note })
       .eq('id', eventId);
-    document.getElementById(`event-${eventId}`).remove();
+    const card = document.getElementById(`event-${eventId}`);
+    if (card) card.remove();
     const remaining = document.querySelectorAll('.event-card');
     if (remaining.length === 0) renderEvents([]);
+    const msg = THANKS_MSGS[Math.floor(Math.random() * THANKS_MSGS.length)];
+    const toast = document.getElementById('thanksToast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
   }
 
   async function loadEvents() {
