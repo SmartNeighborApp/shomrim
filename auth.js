@@ -67,9 +67,7 @@ async function doRegister() {
       }
     }
   }
-  const school_name = role === ROLES.CHILD
-    ? (document.getElementById('regSchoolChild').value.trim() || null)
-    : (document.getElementById('regSchoolParent').value.trim() || null);
+  const school_name = window.registrationSchool || null;
   const class_name = role === ROLES.CHILD
     ? (document.getElementById('regClass').value.trim() || null)
     : null;
