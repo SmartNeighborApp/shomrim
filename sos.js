@@ -56,7 +56,8 @@ async function triggerSOS(session, urgency, photoFile) {
       lng,
       urgency,
       photo_url,
-      status: 'open'
+      status: 'open',
+      school_name: session.school_name || null
     }])
     .select()
     .single();
