@@ -158,7 +158,7 @@
           ${!responded ? `<button class="btn-skip" onclick="skipEvent('${ev.id}')">🙏 לא יכול<br>כרגע</button>` : ''}
           ${ev.lat && ev.lng ? `<a href="${getWazeUrl(ev.lat, ev.lng)}" target="_blank" class="btn-nav">🧭 נווט</a>` : ''}
           ${ev.lat && ev.lng ? `<a href="${getMapUrl(ev.lat, ev.lng)}" target="_blank" class="btn-map">🗺️ מפה</a>` : ''}
-          <button class="btn-done" id="doneBtn-${ev.id}" style="${responded ? 'display:flex' : 'display:none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
+          <button class="btn-done" id="doneBtn-${ev.id}" style="display:${responded ? 'flex' : 'none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
         </div>`;
       list.appendChild(card);
     }
