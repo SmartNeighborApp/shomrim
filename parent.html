@@ -144,6 +144,7 @@
   function urgencyLabel(u) {
     if (u === 'low') return '🟡 בינוני';
     if (u === 'high') return '🟠 דחוף';
+    if (u === 'pickup') return '🕐 ממתין לאיסוף';
     return '🔴 חירום';
   }
 
@@ -173,27 +174,45 @@
       const { data: childData } = await _supabase.from('shomrim_users').select('name').eq('id', ev.child_id).single();
       const childName = childData ? childData.name : 'ילד לא ידוע';
       const responded = respondedEvents.has(ev.id);
-      const address = ev.lat && ev.lng ? await getAddress(ev.lat, ev.lng) : 'מיקום לא זמין';
+      const address = ev.lat && ev.lng ? await getAddress(ev.lat, ev.lng) : (ev.resolution_note || 'מיקום לא זמין');
       const card = document.createElement('div');
       card.className = `event-card urgency-${ev.urgency}`;
       card.id = `event-${ev.id}`;
-      card.innerHTML = `
-        <div class="event-header">
-          <div class="event-urgency">${urgencyLabel(ev.urgency)}</div>
-          <div class="event-time">${timeAgo(ev.created_at)}</div>
-        </div>
-        <div class="event-child">🧒 ${childName}</div>
-        <div class="event-location">📍 ${address}</div>
-        ${ev.photo_url ? `<img class="event-photo" src="${ev.photo_url}">` : ''}
-        <div class="event-actions">
-          <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)">
-            ${responded ? '✅ אני בדרך' : '🚗 אני בדרך!'}
-          </button>
-          ${!responded ? `<button class="btn-skip" onclick="skipEvent('${ev.id}')">🙏 לא יכול<br>כרגע</button>` : ''}
-          ${ev.lat && ev.lng ? `<a href="${getWazeUrl(ev.lat, ev.lng)}" target="_blank" class="btn-nav">🧭 נווט</a>` : ''}
-          ${ev.lat && ev.lng ? `<a href="${getMapUrl(ev.lat, ev.lng)}" target="_blank" class="btn-map">🗺️ מפה</a>` : ''}
-          <button class="btn-done" id="doneBtn-${ev.id}" style="display:${responded ? 'flex' : 'none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
-        </div>`;
+      if (ev.urgency === 'pickup') {
+        card.style.borderRightColor = '#1a3c6e';
+        card.innerHTML = `
+          <div class="event-header">
+            <div class="event-urgency" style="background:#e8f0ff;color:#1a3c6e;">🕐 ממתין לאיסוף</div>
+            <div class="event-time">${timeAgo(ev.created_at)}</div>
+          </div>
+          <div class="event-child">🧒 ${childName}</div>
+          <div class="event-location">📍 ${ev.resolution_note || 'כתובת לא צוינה'}</div>
+          <div class="event-actions">
+            <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)" style="flex:1">
+              ${responded ? '✅ בדרך לאסוף' : '🚗 בדרך לאסוף!'}
+            </button>
+            ${!responded ? `<button class="btn-skip" onclick="skipEvent('${ev.id}')">🙏 לא יכול<br>כרגע</button>` : ''}
+            <button class="btn-done" id="doneBtn-${ev.id}" style="display:${responded ? 'flex' : 'none'}" onclick="markDone('${ev.id}')">✅ אספתי</button>
+          </div>`;
+      } else {
+        card.innerHTML = `
+          <div class="event-header">
+            <div class="event-urgency">${urgencyLabel(ev.urgency)}</div>
+            <div class="event-time">${timeAgo(ev.created_at)}</div>
+          </div>
+          <div class="event-child">🧒 ${childName}</div>
+          <div class="event-location">📍 ${address}</div>
+          ${ev.photo_url ? `<img class="event-photo" src="${ev.photo_url}">` : ''}
+          <div class="event-actions">
+            <button class="btn-coming ${responded ? 'responded' : ''}" id="comingBtn-${ev.id}" onclick="respondToEvent('${ev.id}', this)">
+              ${responded ? '✅ אני בדרך' : '🚗 אני בדרך!'}
+            </button>
+            ${!responded ? `<button class="btn-skip" onclick="skipEvent('${ev.id}')">🙏 לא יכול<br>כרגע</button>` : ''}
+            ${ev.lat && ev.lng ? `<a href="${getWazeUrl(ev.lat, ev.lng)}" target="_blank" class="btn-nav">🧭 נווט</a>` : ''}
+            ${ev.lat && ev.lng ? `<a href="${getMapUrl(ev.lat, ev.lng)}" target="_blank" class="btn-map">🗺️ מפה</a>` : ''}
+            <button class="btn-done" id="doneBtn-${ev.id}" style="display:${responded ? 'flex' : 'none'}" onclick="markDone('${ev.id}')">✅ טופל</button>
+          </div>`;
+      }
       list.appendChild(card);
     }
   }
