@@ -94,6 +94,14 @@
       <label>🎂 גיל</label>
       <input type="number" id="regAge" placeholder="גיל" min="6" max="17">
     </div>
+    <div class="form-group" id="classGroup">
+      <label>🏫 כיתה</label>
+      <input type="text" id="regClass" placeholder="לדוגמה: ד׳2">
+    </div>
+    <div class="form-group" id="schoolChildGroup">
+      <label>🏫 שם בית הספר</label>
+      <input type="text" id="regSchoolChild" placeholder="שם בית הספר">
+    </div>
     <div class="form-group" id="parentPhoneGroup">
       <label>📱 טלפון הורה (לאישור)</label>
       <input type="tel" id="regParentPhone" placeholder="05X-XXXXXXX" maxlength="10">
@@ -116,6 +124,10 @@
         <div class="upload-text" id="uploadText">לחץ להעלאת תמונה</div>
       </div>
       <input type="file" id="regPhoto" accept="image/*" capture="user" style="display:none" onchange="previewPhoto(this)">
+    </div>
+    <div class="form-group" id="schoolParentGroup" style="display:none">
+      <label>🏫 שם בית הספר</label>
+      <input type="text" id="regSchoolParent" placeholder="שם בית הספר">
     </div>
     <div class="form-group">
       <label>🔑 PIN (4 ספרות אחרונות של הטלפון)</label>
@@ -152,6 +164,9 @@
     document.getElementById('idGroup').style.display = role === 'parent' ? 'block' : 'none';
     document.getElementById('declarationGroup').style.display = role === 'parent' ? 'block' : 'none';
     document.getElementById('photoGroup').style.display = role === 'parent' ? 'block' : 'none';
+    document.getElementById('classGroup').style.display = role === 'child' ? 'block' : 'none';
+    document.getElementById('schoolChildGroup').style.display = role === 'child' ? 'block' : 'none';
+    document.getElementById('schoolParentGroup').style.display = role === 'parent' ? 'block' : 'none';
   }
 
   function previewPhoto(input) {
