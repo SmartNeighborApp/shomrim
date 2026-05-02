@@ -59,6 +59,13 @@ async function doRegister() {
       }
     }
   }
+  const school_name = role === ROLES.CHILD
+    ? (document.getElementById('regSchoolChild').value.trim() || null)
+    : (document.getElementById('regSchoolParent').value.trim() || null);
+  const class_name = role === ROLES.CHILD
+    ? (document.getElementById('regClass').value.trim() || null)
+    : null;
+
   const userData = {
     name,
     phone,
@@ -68,6 +75,8 @@ async function doRegister() {
     id_number: role === ROLES.PARENT ? document.getElementById('regId').value.trim() : null,
     declared_no_criminal: role === ROLES.PARENT ? document.getElementById('regDeclare').checked : false,
     photo_url,
+    school_name,
+    class_name,
     is_verified: false
   };
   const { data, error } = await _supabase
