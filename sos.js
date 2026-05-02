@@ -61,12 +61,12 @@ async function triggerSOS(session, urgency, photoFile) {
 function startPolling(eventId) {
   if (pollingInterval) clearInterval(pollingInterval);
   pollingInterval = setInterval(async () => {
-    const { count } = await _supabase
+    const { data: responders } = await _supabase
       .from('shomrim_responders')
-      .select('*', { count: 'exact', head: true })
+      .select('parent_name, parent_photo')
       .eq('event_id', eventId)
       .eq('status', 'coming');
-    updateResponders(count || 0);
+    updateResponders(responders || []);
   }, 3000);
 }
 
