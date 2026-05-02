@@ -44,6 +44,21 @@ async function doRegister() {
     .eq('phone', phone)
     .maybeSingle();
   if (existing) return showError('registerError', 'מספר הטלפון כבר רשום במערכת');
+  // העלאת תמונה לסופהבייס אם הורה בחר תמונה
+  let photo_url = null;
+  if (role === ROLES.PARENT) {
+    const photoFile = document.getElementById('regPhoto').files[0];
+    if (photoFile) {
+      const fileName = `parent_${Date.now()}_${phone}.jpg`;
+      const { data: uploadData, error: uploadError } = await _supabase.storage
+        .from('shomrim-photos')
+        .upload(fileName, photoFile, { upsert: true });
+      if (!uploadError) {
+        const { data: urlData } = _supabase.storage.from('shomrim-photos').getPublicUrl(fileName);
+        photo_url = urlData.publicUrl;
+      }
+    }
+  }
   const userData = {
     name,
     phone,
@@ -52,6 +67,7 @@ async function doRegister() {
     age: role === ROLES.CHILD ? parseInt(document.getElementById('regAge').value) : null,
     id_number: role === ROLES.PARENT ? document.getElementById('regId').value.trim() : null,
     declared_no_criminal: role === ROLES.PARENT ? document.getElementById('regDeclare').checked : false,
+    photo_url,
     is_verified: false
   };
   const { data, error } = await _supabase
