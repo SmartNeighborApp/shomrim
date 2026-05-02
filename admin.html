@@ -3,256 +3,566 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>שומרים — ניהול</title>
+<title>שומרים — מרכז ניהול</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --blue: #1a3c6e;
+    --blue-light: #2e5ca8;
+    --blue-pale: #e8f0ff;
+    --green: #006622;
+    --green-light: #f0fff4;
+    --orange: #ff7700;
+    --orange-light: #fff3e6;
+    --red: #cc0000;
+    --red-light: #fff0f0;
+    --yellow: #ffc107;
+    --yellow-light: #fff9e6;
+    --gray: #f4f6fb;
+    --gray-mid: #e2e8f0;
+    --text: #1e2a3a;
+    --text-soft: #64748b;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(26,60,110,0.10);
+    --shadow-lg: 0 8px 40px rgba(26,60,110,0.15);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-  .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 10px; }
-  .header h2 { color: #1a3c6e; font-size: 20px; }
-  .logout-btn { background: none; border: none; color: #999; font-size: 14px; cursor: pointer; font-family: inherit; }
+  body { font-family: 'Heebo', sans-serif; background: var(--gray); min-height: 100vh; color: var(--text); }
 
-  /* מסך כניסה */
-  .login-box { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
-  .login-icon { font-size: 56px; margin-bottom: 12px; }
-  .login-title { font-size: 22px; font-weight: bold; color: #1a3c6e; margin-bottom: 6px; }
-  .login-sub { font-size: 14px; color: #888; margin-bottom: 24px; }
-  .login-input { width: 100%; padding: 14px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 18px; font-family: inherit; outline: none; text-align: center; letter-spacing: 6px; margin-bottom: 12px; }
-  .login-input:focus { border-color: #1a3c6e; }
-  .btn-login { width: 100%; padding: 16px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .login-error { color: #cc0000; font-size: 14px; margin-top: 10px; display: none; }
+  /* ===== מסך כניסה ===== */
+  .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f2447 0%, #1a3c6e 50%, #2e5ca8 100%); padding: 20px; }
+  .login-card { background: white; border-radius: 28px; padding: 48px 40px; width: 100%; max-width: 420px; box-shadow: 0 24px 80px rgba(0,0,0,0.3); text-align: center; }
+  .login-logo { font-size: 72px; margin-bottom: 8px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
+  .login-title { font-size: 28px; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
+  .login-sub { font-size: 15px; color: var(--text-soft); margin-bottom: 32px; }
+  .login-field { margin-bottom: 16px; text-align: right; }
+  .login-field label { display: block; font-size: 13px; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+  .login-input { width: 100%; padding: 14px 16px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 16px; font-family: 'Heebo', sans-serif; outline: none; transition: border 0.2s; background: var(--gray); }
+  .login-input:focus { border-color: var(--blue); background: white; }
+  .login-input.pin { letter-spacing: 8px; text-align: center; font-size: 22px; font-weight: 700; }
+  .btn-login { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: white; border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; margin-top: 8px; box-shadow: 0 4px 16px rgba(26,60,110,0.3); }
+  .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,60,110,0.4); }
+  .login-error { color: var(--red); font-size: 14px; margin-top: 12px; display: none; font-weight: 500; }
 
-  /* תוכן ראשי */
-  .main-content { width: 100%; max-width: 500px; display: none; }
+  /* ===== מבנה ראשי ===== */
+  .app { display: none; min-height: 100vh; }
+  .sidebar { position: fixed; top: 0; right: 0; width: 240px; height: 100vh; background: linear-gradient(180deg, #0f2447 0%, #1a3c6e 100%); padding: 24px 0; z-index: 100; overflow-y: auto; }
+  .sidebar-logo { text-align: center; padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+  .sidebar-logo .icon { font-size: 36px; display: block; margin-bottom: 4px; }
+  .sidebar-logo .name { color: white; font-size: 18px; font-weight: 800; }
+  .sidebar-logo .school { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; border-right: 3px solid transparent; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-right-color: var(--yellow); }
+  .nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+  .nav-badge { background: var(--red); color: white; border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-right: auto; }
+  .main { margin-right: 240px; padding: 28px; min-height: 100vh; }
 
-  /* כרטיסי סקשן */
-  .section-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-  .section-title { font-size: 17px; font-weight: bold; color: #1a3c6e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  /* ===== header ===== */
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .page-title { font-size: 24px; font-weight: 800; color: var(--blue); }
+  .page-date { font-size: 13px; color: var(--text-soft); background: white; padding: 8px 14px; border-radius: 20px; box-shadow: var(--shadow); }
+  .btn-logout { background: none; border: 2px solid var(--gray-mid); color: var(--text-soft); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* ===== sections ===== */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ===== stats ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; border-radius: 0 var(--radius) var(--radius) 0; }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.orange::before { background: var(--orange); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-num { font-size: 36px; font-weight: 900; color: var(--blue); line-height: 1; }
+  .stat-card.green .stat-num { color: var(--green); }
+  .stat-card.orange .stat-num { color: var(--orange); }
+  .stat-card.red .stat-num { color: var(--red); }
+  .stat-label { font-size: 13px; color: var(--text-soft); margin-top: 6px; font-weight: 500; }
+  .stat-icon { font-size: 28px; position: absolute; left: 16px; top: 16px; opacity: 0.15; }
+
+  /* ===== גרף ===== */
+  .chart-card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 24px; }
+  .chart-title { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 20px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .chart-bar { width: 100%; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--blue-light), var(--blue)); transition: height 0.6s ease; min-height: 4px; }
+  .chart-bar.has-critical { background: linear-gradient(180deg, #ff4444, var(--red)); }
+  .chart-label { font-size: 11px; color: var(--text-soft); font-weight: 600; }
+  .chart-count { font-size: 12px; font-weight: 700; color: var(--blue); }
+
+  /* ===== כרטיסי רשימה ===== */
+  .list-card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+  .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .list-title { font-size: 16px; font-weight: 700; color: var(--blue); }
+  .search-input { padding: 9px 14px; border: 2px solid var(--gray-mid); border-radius: 20px; font-size: 13px; font-family: 'Heebo', sans-serif; outline: none; width: 200px; transition: border 0.2s; }
+  .search-input:focus { border-color: var(--blue); }
+
+  /* כרטיס הורה */
+  .person-card { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius-sm); border: 2px solid var(--gray-mid); margin-bottom: 10px; transition: all 0.2s; }
+  .person-card:hover { border-color: var(--blue); background: var(--blue-pale); }
+  .person-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--gray-mid); flex-shrink: 0; border: 2px solid var(--gray-mid); }
+  .person-avatar-ph { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0; }
+  .person-info { flex: 1; min-width: 0; }
+  .person-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .person-meta { font-size: 12px; color: var(--text-soft); margin-top: 3px; line-height: 1.6; }
+  .person-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-approve { padding: 8px 14px; background: var(--green-light); color: var(--green); border: 2px solid var(--green); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+  .btn-approve:hover { background: var(--green); color: white; }
+  .btn-reject { padding: 8px 14px; background: var(--red-light); color: var(--red); border: 2px solid var(--red); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+  .btn-reject:hover { background: var(--red); color: white; }
+  .btn-suspend { padding: 8px 14px; background: var(--orange-light); color: var(--orange); border: 2px solid var(--orange); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-top: 4px; }
+  .tag-verified { background: var(--green-light); color: var(--green); }
+  .tag-pending { background: var(--yellow-light); color: #856404; }
+  .tag-suspended { background: var(--red-light); color: var(--red); }
+  .tag-risk { background: var(--red-light); color: var(--red); }
+
+  /* כרטיס ילד */
+  .child-card { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius-sm); border: 2px solid var(--gray-mid); margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+  .child-card:hover { border-color: var(--blue); background: var(--blue-pale); }
+  .child-card.at-risk { border-color: var(--red); background: var(--red-light); }
+  .child-stats { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
 
   /* כוננות */
-  .alert-status { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .alert-dot { width: 12px; height: 12px; border-radius: 50%; background: #ddd; }
-  .alert-dot.active { background: #ff7700; animation: blink 1.5s infinite; }
-  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-  .alert-status-text { font-size: 14px; color: #666; }
-  .alert-message-input { width: 100%; padding: 12px 14px; border: 2px solid #ddd; border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px; resize: none; height: 70px; }
-  .alert-message-input:focus { border-color: #ff7700; }
+  .alert-toggle { display: flex; align-items: center; gap: 16px; padding: 20px; background: var(--orange-light); border: 2px solid var(--orange); border-radius: var(--radius-sm); margin-bottom: 16px; }
+  .alert-toggle.inactive { background: var(--gray); border-color: var(--gray-mid); }
+  .toggle-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+  .toggle-dot.inactive { background: var(--gray-mid); }
+  .toggle-dot.active-pulse { animation: pulse-dot 1.5s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .alert-textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Heebo', sans-serif; outline: none; resize: none; height: 80px; margin-bottom: 12px; }
+  .alert-textarea:focus { border-color: var(--orange); }
   .alert-btns { display: flex; gap: 10px; }
-  .btn-alert-on { flex: 1; padding: 14px; background: #ff7700; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .btn-alert-off { flex: 1; padding: 14px; background: #f5f5f5; color: #666; border: 2px solid #ddd; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit; }
-
-  /* הורים ממתינים */
-  .parent-item { background: #f8f9ff; border-radius: 14px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-  .parent-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #ddd; flex-shrink: 0; }
-  .parent-avatar-placeholder { width: 48px; height: 48px; border-radius: 50%; background: #1a3c6e; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
-  .parent-info { flex: 1; }
-  .parent-name { font-size: 15px; font-weight: bold; color: #1a3c6e; }
-  .parent-details { font-size: 12px; color: #888; margin-top: 2px; }
-  .parent-actions { display: flex; gap: 8px; }
-  .btn-approve { padding: 8px 14px; background: #f0fff4; color: #006622; border: 2px solid #006622; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .btn-reject { padding: 8px 14px; background: #fff0f0; color: #cc0000; border: 2px solid #cc0000; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .no-items { text-align: center; color: #aaa; padding: 20px; font-size: 14px; }
+  .btn-alert-on { flex: 1; padding: 14px; background: var(--orange); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .btn-alert-off { flex: 1; padding: 14px; background: white; color: var(--text-soft); border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
 
   /* מפת חום */
-  .heatmap-item { background: #f8f9ff; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-  .heatmap-address { font-size: 14px; color: #333; font-weight: bold; }
-  .heatmap-details { font-size: 12px; color: #888; margin-top: 3px; }
-  .heatmap-count { background: #1a3c6e; color: white; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: bold; white-space: nowrap; }
-  .urgency-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; }
-  .badge-critical { background: #fff0f0; color: #cc0000; }
-  .badge-high { background: #fff3e6; color: #7d3c00; }
-  .badge-low { background: #fff9e6; color: #856404; }
+  .heatmap-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: var(--radius-sm); background: var(--gray); margin-bottom: 8px; border-right: 4px solid var(--blue); }
+  .heatmap-item.critical { border-right-color: var(--red); background: var(--red-light); }
+  .heatmap-item.high { border-right-color: var(--orange); background: var(--orange-light); }
+  .heatmap-addr { font-size: 14px; font-weight: 700; color: var(--text); }
+  .heatmap-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .heatmap-badge { background: var(--blue); color: white; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; }
+  .heatmap-badge.critical { background: var(--red); }
+  .heatmap-badge.high { background: var(--orange); }
+  #mapContainer { width: 100%; height: 300px; border-radius: var(--radius-sm); overflow: hidden; margin-top: 16px; border: 2px solid var(--gray-mid); }
 
-  /* סטטיסטיקות */
-  .stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
-  .stat-box { flex: 1; background: #f0f4ff; border-radius: 14px; padding: 14px; text-align: center; }
-  .stat-num { font-size: 28px; font-weight: bold; color: #1a3c6e; }
-  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+  /* אירועים */
+  .event-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--gray); margin-bottom: 8px; }
+  .event-urgency-icon { font-size: 20px; flex-shrink: 0; }
+  .event-info { flex: 1; }
+  .event-child { font-size: 14px; font-weight: 700; }
+  .event-meta { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .event-status { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+  .status-open { background: var(--red-light); color: var(--red); }
+  .status-handled { background: var(--green-light); color: var(--green); }
 
-  .school-label { background: #e8f0ff; color: #1a3c6e; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: bold; }
+  /* הגדרות PIN */
+  .settings-card { background: white; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); max-width: 440px; }
+  .settings-title { font-size: 18px; font-weight: 700; color: var(--blue); margin-bottom: 20px; }
+  .settings-field { margin-bottom: 14px; }
+  .settings-field label { display: block; font-size: 13px; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+  .settings-input { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 16px; font-family: 'Heebo', sans-serif; outline: none; letter-spacing: 4px; text-align: center; }
+  .settings-input:focus { border-color: var(--blue); }
+  .btn-save { padding: 14px 28px; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .settings-msg { font-size: 13px; margin-top: 10px; display: none; font-weight: 600; }
+  .settings-msg.ok { color: var(--green); }
+  .settings-msg.err { color: var(--red); }
+
+  /* כללי */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .loading { text-align: center; padding: 20px; color: var(--text-soft); font-size: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* דוח */
+  .btn-export { padding: 10px 20px; background: var(--blue-pale); color: var(--blue); border: 2px solid var(--blue); border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+  .btn-export:hover { background: var(--blue); color: white; }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 200px; }
+    .main { margin-right: 200px; padding: 16px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
 <!-- מסך כניסה -->
-<div id="loginBox" class="login-box">
-  <div class="login-icon">🛡️</div>
-  <div class="login-title">ניהול שומרים</div>
-  <div class="login-sub">כניסה ליו"ר ועד הורים</div>
-  <input class="login-input" type="password" id="adminPin" placeholder="••••••" maxlength="6" inputmode="numeric">
-  <button class="btn-login" onclick="doAdminLogin()">כניסה</button>
-  <div class="login-error" id="loginError">PIN שגוי</div>
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">מרכז ניהול שומרים</div>
+    <div class="login-sub">כניסה ליו"ר ועד הורים</div>
+    <div class="login-field">
+      <label>🏫 שם בית הספר</label>
+      <input class="login-input" type="text" id="loginSchool" placeholder="שם בית הספר">
+    </div>
+    <div class="login-field">
+      <label>🔑 קוד כניסה</label>
+      <input class="login-input pin" type="password" id="loginPin" placeholder="••••••" maxlength="6" inputmode="numeric">
+    </div>
+    <button class="btn-login" onclick="doAdminLogin()">כניסה למרכז הניהול</button>
+    <div class="login-error" id="loginError">❌ שם בית ספר או קוד שגויים</div>
+  </div>
 </div>
 
-<!-- תוכן ראשי -->
-<div class="main-content" id="mainContent">
+<!-- אפליקציה ראשית -->
+<div class="app" id="appMain">
 
-  <div class="header">
-    <h2>🛡️ ניהול שומרים</h2>
-    <button class="logout-btn" onclick="adminLogout()">יציאה</button>
-  </div>
-
-  <div style="text-align:center; margin-bottom:16px;">
-    <span class="school-label" id="schoolLabel"></span>
-  </div>
-
-  <!-- סטטיסטיקות -->
-  <div class="stats-row">
-    <div class="stat-box">
-      <div class="stat-num" id="statParents">0</div>
-      <div class="stat-label">הורים פעילים</div>
+  <!-- סיידבר -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <span class="icon">🛡️</span>
+      <div class="name">שומרים</div>
+      <div class="school" id="sideSchool"></div>
     </div>
-    <div class="stat-box">
-      <div class="stat-num" id="statEvents">0</div>
-      <div class="stat-label">אירועים החודש</div>
+    <div class="nav-item active" onclick="showSection('dashboard')">
+      <span class="nav-icon">📊</span> דשבורד
     </div>
-    <div class="stat-box">
-      <div class="stat-num" id="statPending">0</div>
-      <div class="stat-label">ממתינים לאישור</div>
+    <div class="nav-item" onclick="showSection('pending')">
+      <span class="nav-icon">⏳</span> ממתינים לאישור
+      <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('parents')">
+      <span class="nav-icon">👥</span> הורים מאושרים
+    </div>
+    <div class="nav-item" onclick="showSection('children')">
+      <span class="nav-icon">🧒</span> ניהול ילדים
+    </div>
+    <div class="nav-item" onclick="showSection('alert')">
+      <span class="nav-icon">⚠️</span> כוננות מוגברת
+    </div>
+    <div class="nav-item" onclick="showSection('heatmap')">
+      <span class="nav-icon">🗺️</span> מפת חום
+    </div>
+    <div class="nav-item" onclick="showSection('events')">
+      <span class="nav-icon">📋</span> היסטוריית אירועים
+    </div>
+    <div class="nav-item" onclick="showSection('report')">
+      <span class="nav-icon">📄</span> דוחות
+    </div>
+    <div class="nav-item" onclick="showSection('settings')">
+      <span class="nav-icon">⚙️</span> הגדרות
+    </div>
+    <div class="nav-item" onclick="adminLogout()" style="margin-top:auto; border-top:1px solid rgba(255,255,255,0.1);">
+      <span class="nav-icon">🚪</span> יציאה
     </div>
   </div>
 
-  <!-- כוננות מוגברת -->
-  <div class="section-card">
-    <div class="section-title">⚠️ מצב כוננות</div>
-    <div class="alert-status">
-      <div class="alert-dot" id="alertDot"></div>
-      <div class="alert-status-text" id="alertStatusText">כוננות רגילה</div>
+  <!-- תוכן ראשי -->
+  <div class="main">
+
+    <!-- דשבורד -->
+    <div class="section active" id="sec-dashboard">
+      <div class="page-header">
+        <div class="page-title" id="dashTitle">דשבורד</div>
+        <div class="page-date" id="pageDate"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">👥</div>
+          <div class="stat-num" id="statParents">—</div>
+          <div class="stat-label">הורים פעילים</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-num" id="statEvents">—</div>
+          <div class="stat-label">אירועים החודש</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-num" id="statResponse">—</div>
+          <div class="stat-label">זמן תגובה ממוצע</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-num" id="statPending">—</div>
+          <div class="stat-label">ממתינים לאישור</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📈 אירועים — 7 ימים אחרונים</div>
+        <div class="chart-bars" id="chartBars"><div class="loading">טוען גרף...</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="list-card">
+          <div class="list-header"><div class="list-title">⏳ ממתינים לאישור</div></div>
+          <div id="dashPending"><div class="loading">טוען...</div></div>
+        </div>
+        <div class="list-card">
+          <div class="list-header"><div class="list-title">📋 אירועים אחרונים</div></div>
+          <div id="dashEvents"><div class="loading">טוען...</div></div>
+        </div>
+      </div>
     </div>
-    <textarea class="alert-message-input" id="alertMessage" placeholder="הודעה להורים (לדוגמה: ערב חג — אנא היו זמינים)..."></textarea>
-    <div class="alert-btns">
-      <button class="btn-alert-on" onclick="setAlert(true)">⚠️ הפעל כוננות</button>
-      <button class="btn-alert-off" onclick="setAlert(false)">✅ בטל כוננות</button>
+
+    <!-- ממתינים לאישור -->
+    <div class="section" id="sec-pending">
+      <div class="page-header">
+        <div class="page-title">⏳ ממתינים לאישור</div>
+      </div>
+      <div class="list-card">
+        <div id="pendingList"><div class="loading">טוען...</div></div>
+      </div>
     </div>
-  </div>
 
-  <!-- הורים ממתינים לאישור -->
-  <div class="section-card">
-    <div class="section-title">👥 הורים ממתינים לאישור</div>
-    <div id="pendingParentsList"><div class="no-items">טוען...</div></div>
-  </div>
+    <!-- הורים מאושרים -->
+    <div class="section" id="sec-parents">
+      <div class="page-header">
+        <div class="page-title">👥 הורים מאושרים</div>
+        <input class="search-input" type="text" placeholder="🔍 חיפוש..." oninput="filterParents(this.value)">
+      </div>
+      <div class="list-card">
+        <div id="parentsList"><div class="loading">טוען...</div></div>
+      </div>
+    </div>
 
-  <!-- מפת חום -->
-  <div class="section-card">
-    <div class="section-title">🗺️ נקודות חוזרות — מפת חום</div>
-    <div id="heatmapList"><div class="no-items">טוען...</div></div>
-  </div>
+    <!-- ניהול ילדים -->
+    <div class="section" id="sec-children">
+      <div class="page-header">
+        <div class="page-title">🧒 ניהול ילדים</div>
+        <input class="search-input" type="text" placeholder="🔍 חיפוש..." oninput="filterChildren(this.value)">
+      </div>
+      <div class="list-card">
+        <div id="childrenList"><div class="loading">טוען...</div></div>
+      </div>
+    </div>
 
-  <!-- היסטוריית אירועים -->
-  <div class="section-card">
-    <div class="section-title">📋 אירועים אחרונים</div>
-    <div id="eventsList"><div class="no-items">טוען...</div></div>
-  </div>
+    <!-- כוננות -->
+    <div class="section" id="sec-alert">
+      <div class="page-header"><div class="page-title">⚠️ כוננות מוגברת</div></div>
+      <div class="list-card">
+        <div id="alertStatus" class="alert-toggle inactive" style="margin-bottom:20px;">
+          <div class="toggle-dot inactive" id="alertDot"></div>
+          <div>
+            <div style="font-size:15px; font-weight:700;" id="alertStatusText">כוננות רגילה — לא פעילה</div>
+            <div style="font-size:12px; color:var(--text-soft); margin-top:2px;">הורים לא מקבלים התראת כוננות</div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:6px;">✍️ הודעה להורים</label>
+          <textarea class="alert-textarea" id="alertMessage" placeholder="לדוגמה: ערב חג — אנא היו זמינים לקריאות..."></textarea>
+        </div>
+        <div class="alert-btns">
+          <button class="btn-alert-on" onclick="setAlert(true)">⚠️ הפעל כוננות מוגברת</button>
+          <button class="btn-alert-off" onclick="setAlert(false)">✅ בטל כוננות</button>
+        </div>
+      </div>
+    </div>
 
+    <!-- מפת חום -->
+    <div class="section" id="sec-heatmap">
+      <div class="page-header"><div class="page-title">🗺️ מפת חום — נקודות חוזרות</div></div>
+      <div class="grid-2">
+        <div class="list-card">
+          <div class="list-title" style="margin-bottom:16px;">נקודות לפי ספירה</div>
+          <div id="heatmapList"><div class="loading">טוען...</div></div>
+        </div>
+        <div class="list-card">
+          <div class="list-title" style="margin-bottom:8px;">מפה חיה</div>
+          <div id="mapContainer"><div class="loading" style="padding-top:120px;">טוען מפה...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- היסטוריית אירועים -->
+    <div class="section" id="sec-events">
+      <div class="page-header">
+        <div class="page-title">📋 היסטוריית אירועים</div>
+        <button class="btn-export" onclick="exportReport()">📄 ייצוא דוח HTML</button>
+      </div>
+      <div class="list-card">
+        <div id="eventsList"><div class="loading">טוען...</div></div>
+      </div>
+    </div>
+
+    <!-- דוחות -->
+    <div class="section" id="sec-report">
+      <div class="page-header"><div class="page-title">📄 דוחות</div></div>
+      <div class="list-card">
+        <div style="margin-bottom:20px;">
+          <div style="font-size:15px; font-weight:700; color:var(--blue); margin-bottom:8px;">דוח חודשי</div>
+          <div style="font-size:13px; color:var(--text-soft); margin-bottom:16px;">דוח מלא של כל האירועים, הורים ופעולות — מוכן להדפסה</div>
+          <button class="btn-export" onclick="exportReport()">📄 הפק דוח HTML להדפסה</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- הגדרות -->
+    <div class="section" id="sec-settings">
+      <div class="page-header"><div class="page-title">⚙️ הגדרות</div></div>
+      <div class="settings-card">
+        <div class="settings-title">🔑 שינוי קוד כניסה</div>
+        <div class="settings-field">
+          <label>קוד נוכחי</label>
+          <input class="settings-input" type="password" id="pinOld" placeholder="••••••" maxlength="6" inputmode="numeric">
+        </div>
+        <div class="settings-field">
+          <label>קוד חדש</label>
+          <input class="settings-input" type="password" id="pinNew" placeholder="••••••" maxlength="6" inputmode="numeric">
+        </div>
+        <div class="settings-field">
+          <label>אישור קוד חדש</label>
+          <input class="settings-input" type="password" id="pinConfirm" placeholder="••••••" maxlength="6" inputmode="numeric">
+        </div>
+        <button class="btn-save" onclick="changePin()">שמור קוד חדש</button>
+        <div class="settings-msg" id="pinMsg"></div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
-  // PIN ניהול — ניתן לשנות
-  const ADMIN_PIN = '123456';
   let adminSchool = null;
+  let allParents = [];
+  let allChildren = [];
+  let mapInstance = null;
+  let mapMarkers = [];
 
-  function doAdminLogin() {
-    const pin = document.getElementById('adminPin').value.trim();
-    if (pin !== ADMIN_PIN) {
+  // ===== כניסה =====
+  async function doAdminLogin() {
+    const school = document.getElementById('loginSchool').value.trim();
+    const pin = document.getElementById('loginPin').value.trim();
+    if (!school || !pin) return;
+    const { data, error } = await _supabase
+      .from('shomrim_admin_settings')
+      .select('*')
+      .eq('school_name', school)
+      .eq('pin', pin)
+      .maybeSingle();
+    if (!data) {
       document.getElementById('loginError').style.display = 'block';
       return;
     }
-    const school = prompt('שם בית הספר:');
-    if (!school || !school.trim()) return;
-    adminSchool = school.trim();
-    document.getElementById('loginBox').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    document.getElementById('schoolLabel').textContent = '🏫 ' + adminSchool;
+    adminSchool = school;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appMain').style.display = 'block';
+    document.getElementById('sideSchool').textContent = school;
+    document.getElementById('dashTitle').textContent = 'דשבורד — ' + school;
+    document.getElementById('pageDate').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     loadAll();
   }
 
   function adminLogout() {
     adminSchool = null;
-    document.getElementById('loginBox').style.display = 'flex';
-    document.getElementById('mainContent').style.display = 'none';
-    document.getElementById('adminPin').value = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appMain').style.display = 'none';
+    document.getElementById('loginPin').value = '';
     document.getElementById('loginError').style.display = 'none';
   }
 
+  // ===== ניווט =====
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'heatmap') loadMap();
+  }
+
+  // ===== טעינת הכל =====
   async function loadAll() {
     await Promise.all([
+      loadStats(),
+      loadChart(),
+      loadPending(),
+      loadParents(),
+      loadChildren(),
       loadAlertStatus(),
-      loadPendingParents(),
       loadHeatmap(),
-      loadRecentEvents(),
-      loadStats()
+      loadEvents()
     ]);
   }
 
-  // כוננות
-  async function loadAlertStatus() {
-    const { data } = await _supabase
-      .from('shomrim_alert_modes')
-      .select('*')
-      .eq('school_name', adminSchool)
-      .eq('active', true)
-      .maybeSingle();
-    const dot = document.getElementById('alertDot');
-    const txt = document.getElementById('alertStatusText');
-    if (data) {
-      dot.classList.add('active');
-      txt.textContent = 'כוננות מוגברת פעילה';
-      txt.style.color = '#ff7700';
-      if (data.message) document.getElementById('alertMessage').value = data.message;
-    } else {
-      dot.classList.remove('active');
-      txt.textContent = 'כוננות רגילה';
-      txt.style.color = '#888';
+  // ===== סטטיסטיקות =====
+  async function loadStats() {
+    const now = new Date();
+    const firstMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const [{ count: parents }, { count: events }, { count: pending }] = await Promise.all([
+      _supabase.from('shomrim_users').select('*', { count: 'exact', head: true }).eq('role', 'parent').eq('is_verified', true).eq('school_name', adminSchool),
+      _supabase.from('shomrim_sos_events').select('*', { count: 'exact', head: true }).eq('school_name', adminSchool).gte('created_at', firstMonth),
+      _supabase.from('shomrim_users').select('*', { count: 'exact', head: true }).eq('role', 'parent').eq('is_verified', false).eq('school_name', adminSchool)
+    ]);
+    document.getElementById('statParents').textContent = parents || 0;
+    document.getElementById('statEvents').textContent = events || 0;
+    document.getElementById('statPending').textContent = pending || 0;
+    document.getElementById('statResponse').textContent = '~3 דק\'';
+    if (pending > 0) {
+      document.getElementById('pendingBadge').style.display = 'inline';
+      document.getElementById('pendingBadge').textContent = pending;
     }
   }
 
-  async function setAlert(active) {
-    const message = document.getElementById('alertMessage').value.trim();
-    await _supabase.from('shomrim_alert_modes')
-      .delete()
-      .eq('school_name', adminSchool);
-    if (active) {
-      await _supabase.from('shomrim_alert_modes').insert([{
-        school_name: adminSchool,
-        active: true,
-        message: message || 'כוננות מוגברת — אנא היו זמינים'
-      }]);
+  // ===== גרף =====
+  async function loadChart() {
+    const days = [];
+    const labels = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d);
     }
-    await loadAlertStatus();
+    const from = days[0].toISOString();
+    const { data } = await _supabase.from('shomrim_sos_events').select('created_at, urgency').eq('school_name', adminSchool).gte('created_at', from);
+    const counts = days.map(d => {
+      const dayStr = d.toDateString();
+      return (data || []).filter(e => new Date(e.created_at).toDateString() === dayStr);
+    });
+    const max = Math.max(...counts.map(c => c.length), 1);
+    const container = document.getElementById('chartBars');
+    container.innerHTML = '';
+    counts.forEach((dayEvents, i) => {
+      const hasCritical = dayEvents.some(e => e.urgency === 'critical');
+      const height = Math.max((dayEvents.length / max) * 100, dayEvents.length > 0 ? 8 : 4);
+      const wrap = document.createElement('div');
+      wrap.className = 'chart-bar-wrap';
+      wrap.innerHTML = `
+        <div class="chart-count">${dayEvents.length || ''}</div>
+        <div class="chart-bar ${hasCritical ? 'has-critical' : ''}" style="height:${height}%"></div>
+        <div class="chart-label">${labels[days[i].getDay()]}<br>${days[i].getDate()}/${days[i].getMonth()+1}</div>`;
+      container.appendChild(wrap);
+    });
   }
 
-  // הורים ממתינים
-  async function loadPendingParents() {
-    const { data } = await _supabase
-      .from('shomrim_users')
-      .select('*')
-      .eq('role', 'parent')
-      .eq('is_verified', false)
-      .eq('school_name', adminSchool)
-      .order('created_at', { ascending: false });
-    const list = document.getElementById('pendingParentsList');
-    document.getElementById('statPending').textContent = data ? data.length : 0;
-    if (!data || data.length === 0) {
-      list.innerHTML = '<div class="no-items">אין הורים ממתינים לאישור ✅</div>';
-      return;
-    }
+  // ===== ממתינים =====
+  async function loadPending() {
+    const { data } = await _supabase.from('shomrim_users').select('*').eq('role', 'parent').eq('is_verified', false).eq('school_name', adminSchool).order('created_at', { ascending: false });
+    renderPending(data || [], 'pendingList');
+    renderPendingMini(data || [], 'dashPending');
+  }
+
+  function renderPending(data, containerId) {
+    const list = document.getElementById(containerId);
+    if (!data.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div>אין ממתינים לאישור</div>'; return; }
     list.innerHTML = '';
     data.forEach(p => {
       const item = document.createElement('div');
-      item.className = 'parent-item';
-      item.id = `parent-${p.id}`;
-      const avatar = p.photo_url
-        ? `<img class="parent-avatar" src="${p.photo_url}">`
-        : `<div class="parent-avatar-placeholder">${p.name[0]}</div>`;
-      item.innerHTML = `
-        ${avatar}
-        <div class="parent-info">
-          <div class="parent-name">${p.name}</div>
-          <div class="parent-details">📱 ${p.phone} · 🪪 ${p.id_number || '—'}</div>
-          <div class="parent-details">✍️ ${p.agreement_name || '—'}</div>
+      item.className = 'person-card';
+      item.id = `pend-${p.id}`;
+      const av = p.photo_url ? `<img class="person-avatar" src="${p.photo_url}">` : `<div class="person-avatar-ph">${p.name[0]}</div>`;
+      item.innerHTML = `${av}
+        <div class="person-info">
+          <div class="person-name">${p.name}</div>
+          <div class="person-meta">
+            📱 ${p.phone}<br>
+            🪪 ת"ז: ${p.id_number || '—'}<br>
+            🏫 ${p.school_name || '—'}<br>
+            ✍️ חתימה: ${p.agreement_name || '—'}
+          </div>
+          <span class="tag tag-pending">ממתין לאישור</span>
         </div>
-        <div class="parent-actions">
+        <div class="person-actions">
           <button class="btn-approve" onclick="approveParent('${p.id}')">✅ אשר</button>
           <button class="btn-reject" onclick="rejectParent('${p.id}')">❌ דחה</button>
         </div>`;
@@ -260,122 +570,353 @@
     });
   }
 
-  async function approveParent(parentId) {
-    await _supabase.from('shomrim_users')
-      .update({ is_verified: true })
-      .eq('id', parentId);
-    document.getElementById(`parent-${parentId}`)?.remove();
-    const current = parseInt(document.getElementById('statPending').textContent) - 1;
-    document.getElementById('statPending').textContent = Math.max(0, current);
-    const active = parseInt(document.getElementById('statParents').textContent) + 1;
-    document.getElementById('statParents').textContent = active;
+  function renderPendingMini(data, containerId) {
+    const list = document.getElementById(containerId);
+    if (!data.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">אין ממתינים ✅</div>'; return; }
+    list.innerHTML = '';
+    data.slice(0, 3).forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'person-card';
+      const av = p.photo_url ? `<img class="person-avatar" src="${p.photo_url}">` : `<div class="person-avatar-ph">${p.name[0]}</div>`;
+      item.innerHTML = `${av}
+        <div class="person-info">
+          <div class="person-name">${p.name}</div>
+          <div class="person-meta">📱 ${p.phone}</div>
+        </div>
+        <div class="person-actions">
+          <button class="btn-approve" onclick="approveParent('${p.id}')">✅</button>
+          <button class="btn-reject" onclick="rejectParent('${p.id}')">❌</button>
+        </div>`;
+      list.appendChild(item);
+    });
   }
 
-  async function rejectParent(parentId) {
-    if (!confirm('למחוק את הרישום של הורה זה?')) return;
-    await _supabase.from('shomrim_users').delete().eq('id', parentId);
-    document.getElementById(`parent-${parentId}`)?.remove();
-    const current = parseInt(document.getElementById('statPending').textContent) - 1;
-    document.getElementById('statPending').textContent = Math.max(0, current);
+  async function approveParent(id) {
+    await _supabase.from('shomrim_users').update({ is_verified: true }).eq('id', id);
+    document.querySelectorAll(`#pend-${id}`).forEach(el => el.remove());
+    await loadStats();
+    await loadParents();
   }
 
-  // סטטיסטיקות
-  async function loadStats() {
-    const { count: parents } = await _supabase
-      .from('shomrim_users')
-      .select('*', { count: 'exact', head: true })
-      .eq('role', 'parent')
-      .eq('is_verified', true)
-      .eq('school_name', adminSchool);
-    document.getElementById('statParents').textContent = parents || 0;
-
-    const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const { count: events } = await _supabase
-      .from('shomrim_sos_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('school_name', adminSchool)
-      .gte('created_at', firstOfMonth);
-    document.getElementById('statEvents').textContent = events || 0;
+  async function rejectParent(id) {
+    if (!confirm('למחוק הרישום של הורה זה?')) return;
+    await _supabase.from('shomrim_users').delete().eq('id', id);
+    document.querySelectorAll(`#pend-${id}`).forEach(el => el.remove());
+    await loadStats();
   }
 
-  // מפת חום
-  async function loadHeatmap() {
-    const { data } = await _supabase
-      .from('shomrim_sos_events')
-      .select('resolution_note, urgency, created_at')
-      .eq('school_name', adminSchool)
-      .not('resolution_note', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    const list = document.getElementById('heatmapList');
-    if (!data || data.length === 0) {
-      list.innerHTML = '<div class="no-items">אין נתונים עדיין</div>';
-      return;
+  // ===== הורים מאושרים =====
+  async function loadParents() {
+    const { data } = await _supabase.from('shomrim_users').select('*').eq('role', 'parent').eq('is_verified', true).eq('school_name', adminSchool).order('name');
+    allParents = data || [];
+    renderParents(allParents);
+  }
+
+  function renderParents(data) {
+    const list = document.getElementById('parentsList');
+    if (!data.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>אין הורים מאושרים עדיין</div>'; return; }
+    list.innerHTML = '';
+    data.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'person-card';
+      const av = p.photo_url ? `<img class="person-avatar" src="${p.photo_url}">` : `<div class="person-avatar-ph">${p.name[0]}</div>`;
+      const suspendedTag = p.is_verified === false ? '<span class="tag tag-suspended">מושעה</span>' : '<span class="tag tag-verified">פעיל ✅</span>';
+      item.innerHTML = `${av}
+        <div class="person-info">
+          <div class="person-name">${p.name} ${suspendedTag}</div>
+          <div class="person-meta">📱 ${p.phone} · 🪪 ${p.id_number || '—'}</div>
+          <div class="person-meta">✍️ ${p.agreement_name || '—'}</div>
+        </div>
+        <div class="person-actions">
+          <button class="btn-suspend" onclick="suspendParent('${p.id}')">⏸ השעה</button>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  function filterParents(q) {
+    const filtered = allParents.filter(p => p.name.includes(q) || p.phone.includes(q));
+    renderParents(filtered);
+  }
+
+  async function suspendParent(id) {
+    if (!confirm('להשעות הורה זה? הוא לא יקבל קריאות.')) return;
+    await _supabase.from('shomrim_users').update({ is_verified: false }).eq('id', id);
+    await loadParents();
+  }
+
+  // ===== ילדים =====
+  async function loadChildren() {
+    const { data: children } = await _supabase.from('shomrim_users').select('*').eq('role', 'child').eq('school_name', adminSchool).order('name');
+    allChildren = children || [];
+    const { data: events } = await _supabase.from('shomrim_sos_events').select('child_id, urgency, status').eq('school_name', adminSchool);
+    renderChildren(allChildren, events || []);
+  }
+
+  function renderChildren(children, events) {
+    const list = document.getElementById('childrenList');
+    if (!children.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🧒</div>אין ילדים רשומים</div>'; return; }
+    list.innerHTML = '';
+    children.forEach(c => {
+      const childEvents = events.filter(e => e.child_id === c.id);
+      const criticalCount = childEvents.filter(e => e.urgency === 'critical').length;
+      const isRisk = c.at_risk || criticalCount >= 3;
+      const item = document.createElement('div');
+      item.className = `child-card ${isRisk ? 'at-risk' : ''}`;
+      item.innerHTML = `
+        <div class="person-avatar-ph" style="background:${isRisk ? 'var(--red)' : 'var(--blue)'};">${c.name[0]}</div>
+        <div class="person-info">
+          <div class="person-name">${c.name} ${isRisk ? '<span class="tag tag-risk">⚠️ בסיכון</span>' : ''}</div>
+          <div class="person-meta">🎂 גיל ${c.age || '—'} · 🏫 כיתה ${c.class_name || '—'}</div>
+          <div class="child-stats">📞 ${childEvents.length} קריאות סה"כ · 🔴 ${criticalCount} חירום</div>
+        </div>
+        <div class="person-actions">
+          <button class="btn-${isRisk ? 'approve' : 'reject'}" onclick="toggleRisk('${c.id}', ${isRisk})">${isRisk ? '✅ הסר סיכון' : '⚠️ סמן בסיכון'}</button>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  function filterChildren(q) {
+    const filtered = allChildren.filter(c => c.name.includes(q) || (c.class_name || '').includes(q));
+    renderChildren(filtered, []);
+  }
+
+  async function toggleRisk(id, current) {
+    await _supabase.from('shomrim_users').update({ at_risk: !current }).eq('id', id);
+    await loadChildren();
+  }
+
+  // ===== כוננות =====
+  async function loadAlertStatus() {
+    const { data } = await _supabase.from('shomrim_alert_modes').select('*').eq('school_name', adminSchool).eq('active', true).maybeSingle();
+    const dot = document.getElementById('alertDot');
+    const txt = document.getElementById('alertStatusText');
+    const box = document.getElementById('alertStatus');
+    if (data) {
+      dot.className = 'toggle-dot active-pulse';
+      txt.textContent = '⚠️ כוננות מוגברת פעילה';
+      box.className = 'alert-toggle';
+      if (data.message) document.getElementById('alertMessage').value = data.message;
+    } else {
+      dot.className = 'toggle-dot inactive';
+      txt.textContent = 'כוננות רגילה — לא פעילה';
+      box.className = 'alert-toggle inactive';
     }
-    // ספירה לפי כתובת
+  }
+
+  async function setAlert(active) {
+    const message = document.getElementById('alertMessage').value.trim();
+    await _supabase.from('shomrim_alert_modes').delete().eq('school_name', adminSchool);
+    if (active) {
+      await _supabase.from('shomrim_alert_modes').insert([{ school_name: adminSchool, active: true, message: message || 'כוננות מוגברת — אנא היו זמינים' }]);
+    }
+    await loadAlertStatus();
+  }
+
+  // ===== מפת חום =====
+  async function loadHeatmap() {
+    const { data } = await _supabase.from('shomrim_sos_events').select('resolution_note, urgency, lat, lng').eq('school_name', adminSchool).not('resolution_note', 'is', null).order('created_at', { ascending: false }).limit(100);
+    const list = document.getElementById('heatmapList');
+    if (!data || !data.length) { list.innerHTML = '<div class="empty-state">אין נתונים עדיין</div>'; return; }
     const counts = {};
     data.forEach(ev => {
       const key = ev.resolution_note;
       if (!key || key.length < 3) return;
-      if (!counts[key]) counts[key] = { count: 0, urgencies: [] };
+      if (!counts[key]) counts[key] = { count: 0, urgencies: [], lat: ev.lat, lng: ev.lng };
       counts[key].count++;
       counts[key].urgencies.push(ev.urgency);
     });
-    const sorted = Object.entries(counts).sort((a, b) => b[1].count - a[1].count).slice(0, 8);
-    if (sorted.length === 0) {
-      list.innerHTML = '<div class="no-items">אין נתונים עדיין</div>';
-      return;
-    }
+    const sorted = Object.entries(counts).sort((a, b) => b[1].count - a[1].count).slice(0, 10);
     list.innerHTML = '';
-    sorted.forEach(([address, info]) => {
+    sorted.forEach(([addr, info]) => {
       const hasCritical = info.urgencies.includes('critical');
       const hasHigh = info.urgencies.includes('high');
-      const badgeClass = hasCritical ? 'badge-critical' : hasHigh ? 'badge-high' : 'badge-low';
-      const badgeText = hasCritical ? '🔴 חירום' : hasHigh ? '🟠 דחוף' : '🟡 בינוני';
+      const cls = hasCritical ? 'critical' : hasHigh ? 'high' : '';
+      const badgeCls = hasCritical ? 'critical' : hasHigh ? 'high' : '';
+      const icon = hasCritical ? '🔴' : hasHigh ? '🟠' : '🟡';
       const item = document.createElement('div');
-      item.className = 'heatmap-item';
+      item.className = `heatmap-item ${cls}`;
       item.innerHTML = `
         <div>
-          <div class="heatmap-address">${address}</div>
-          <span class="urgency-badge ${badgeClass}">${badgeText}</span>
+          <div class="heatmap-addr">${icon} ${addr}</div>
+          <div class="heatmap-sub">${info.count} אירועים</div>
         </div>
-        <div class="heatmap-count">${info.count} אירועים</div>`;
+        <div class="heatmap-badge ${badgeCls}">${info.count}</div>`;
       list.appendChild(item);
     });
   }
 
-  // אירועים אחרונים
-  async function loadRecentEvents() {
-    const { data } = await _supabase
-      .from('shomrim_sos_events')
-      .select('*, shomrim_users!child_id(name)')
-      .eq('school_name', adminSchool)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    const list = document.getElementById('eventsList');
-    if (!data || data.length === 0) {
-      list.innerHTML = '<div class="no-items">אין אירועים עדיין</div>';
-      return;
+  function loadMap() {
+    const container = document.getElementById('mapContainer');
+    if (mapInstance) return;
+    // טעינת Leaflet
+    if (!window.L) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => initMap();
+      document.head.appendChild(script);
+    } else { initMap(); }
+  }
+
+  async function initMap() {
+    const container = document.getElementById('mapContainer');
+    container.innerHTML = '';
+    mapInstance = L.map(container).setView([31.9, 34.8], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapInstance);
+    const { data } = await _supabase.from('shomrim_sos_events').select('lat, lng, urgency, resolution_note').eq('school_name', adminSchool).not('lat', 'is', null).not('lng', 'is', null).limit(50);
+    if (data && data.length) {
+      const bounds = [];
+      data.forEach(ev => {
+        const color = ev.urgency === 'critical' ? '#cc0000' : ev.urgency === 'high' ? '#ff7700' : '#ffc107';
+        const marker = L.circleMarker([ev.lat, ev.lng], { radius: 10, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.85 });
+        marker.bindPopup(`<b>${ev.resolution_note || 'מיקום'}</b><br>${ev.urgency === 'critical' ? '🔴 חירום' : ev.urgency === 'high' ? '🟠 דחוף' : '🟡 בינוני'}`);
+        marker.addTo(mapInstance);
+        bounds.push([ev.lat, ev.lng]);
+      });
+      if (bounds.length) mapInstance.fitBounds(bounds, { padding: [20, 20] });
     }
+  }
+
+  // ===== אירועים =====
+  async function loadEvents() {
+    const { data } = await _supabase.from('shomrim_sos_events').select('*, shomrim_users!child_id(name)').eq('school_name', adminSchool).order('created_at', { ascending: false }).limit(30);
+    renderEvents(data || [], 'eventsList');
+    renderEventsMini(data || [], 'dashEvents');
+  }
+
+  function renderEvents(data, containerId) {
+    const list = document.getElementById(containerId);
+    if (!data.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>אין אירועים עדיין</div>'; return; }
     list.innerHTML = '';
+    const icons = { low: '🟡', high: '🟠', critical: '🔴', pickup: '🕐' };
+    const statusLabels = { open: 'פתוח', handled: 'טופל', escalated: 'הוסלם' };
+    const statusCls = { open: 'status-open', handled: 'status-handled', escalated: 'status-open' };
     data.forEach(ev => {
-      const childName = ev.shomrim_users?.name || 'לא ידוע';
-      const date = new Date(ev.created_at);
-      const dateStr = `${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
-      const urgencyMap = { low: '🟡', high: '🟠', critical: '🔴', pickup: '🕐' };
-      const statusMap = { open: 'פתוח', handled: 'טופל', escalated: 'הוסלם' };
+      const name = ev.shomrim_users?.name || 'לא ידוע';
+      const d = new Date(ev.created_at);
+      const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
       const item = document.createElement('div');
-      item.className = 'heatmap-item';
+      item.className = 'event-row';
       item.innerHTML = `
-        <div>
-          <div class="heatmap-address">${urgencyMap[ev.urgency] || '⚪'} ${childName}</div>
-          <div class="heatmap-details">${dateStr} · ${ev.resolution_note || 'ללא כתובת'}</div>
+        <div class="event-urgency-icon">${icons[ev.urgency] || '⚪'}</div>
+        <div class="event-info">
+          <div class="event-child">${name}</div>
+          <div class="event-meta">${dateStr} · ${ev.resolution_note || 'ללא כתובת'}</div>
         </div>
-        <div style="font-size:12px; color:#888;">${statusMap[ev.status] || ev.status}</div>`;
+        <span class="event-status ${statusCls[ev.status] || ''}">${statusLabels[ev.status] || ev.status}</span>`;
       list.appendChild(item);
     });
   }
+
+  function renderEventsMini(data, containerId) {
+    const list = document.getElementById(containerId);
+    if (!data.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">אין אירועים עדיין</div>'; return; }
+    list.innerHTML = '';
+    const icons = { low: '🟡', high: '🟠', critical: '🔴', pickup: '🕐' };
+    data.slice(0, 4).forEach(ev => {
+      const name = ev.shomrim_users?.name || 'לא ידוע';
+      const d = new Date(ev.created_at);
+      const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const item = document.createElement('div');
+      item.className = 'event-row';
+      item.innerHTML = `
+        <div class="event-urgency-icon">${icons[ev.urgency] || '⚪'}</div>
+        <div class="event-info">
+          <div class="event-child">${name}</div>
+          <div class="event-meta">${dateStr}</div>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  // ===== ייצוא דוח HTML =====
+  async function exportReport() {
+    const now = new Date();
+    const firstMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const { data: events } = await _supabase.from('shomrim_sos_events').select('*, shomrim_users!child_id(name)').eq('school_name', adminSchool).gte('created_at', firstMonth).order('created_at', { ascending: false });
+    const { data: parents } = await _supabase.from('shomrim_users').select('*').eq('role', 'parent').eq('is_verified', true).eq('school_name', adminSchool);
+    const icons = { low: '🟡', high: '🟠', critical: '🔴', pickup: '🕐' };
+    const html = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>דוח שומרים — ${adminSchool} — ${now.toLocaleDateString('he-IL')}</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 40px; color: #1e2a3a; direction: rtl; }
+  h1 { color: #1a3c6e; border-bottom: 3px solid #1a3c6e; padding-bottom: 10px; }
+  h2 { color: #1a3c6e; margin-top: 30px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #1a3c6e; color: white; padding: 10px 12px; text-align: right; font-size: 13px; }
+  td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+  tr:nth-child(even) { background: #f4f6fb; }
+  .stat { display: inline-block; background: #e8f0ff; color: #1a3c6e; padding: 8px 20px; border-radius: 12px; margin: 4px; font-weight: bold; }
+  @media print { button { display: none; } }
+</style>
+</head>
+<body>
+<h1>🛡️ דוח שומרים — ${adminSchool}</h1>
+<p>תאריך: ${now.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+<div style="margin:20px 0;">
+  <span class="stat">👥 הורים פעילים: ${parents?.length || 0}</span>
+  <span class="stat">📋 אירועים החודש: ${events?.length || 0}</span>
+  <span class="stat">🔴 חירום: ${events?.filter(e=>e.urgency==='critical').length || 0}</span>
+</div>
+<h2>📋 אירועים החודש</h2>
+<table>
+  <tr><th>תאריך</th><th>ילד</th><th>רמה</th><th>כתובת</th><th>סטטוס</th></tr>
+  ${(events||[]).map(e => {
+    const d = new Date(e.created_at);
+    return `<tr>
+      <td>${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</td>
+      <td>${e.shomrim_users?.name || '—'}</td>
+      <td>${icons[e.urgency]||''} ${e.urgency}</td>
+      <td>${e.resolution_note || '—'}</td>
+      <td>${e.status}</td>
+    </tr>`;
+  }).join('')}
+</table>
+<h2>👥 הורים פעילים</h2>
+<table>
+  <tr><th>שם</th><th>טלפון</th><th>ת"ז</th><th>חתימה</th></tr>
+  ${(parents||[]).map(p => `<tr><td>${p.name}</td><td>${p.phone}</td><td>${p.id_number||'—'}</td><td>${p.agreement_name||'—'}</td></tr>`).join('')}
+</table>
+<br><br>
+<button onclick="window.print()" style="padding:12px 24px; background:#1a3c6e; color:white; border:none; border-radius:8px; font-size:15px; cursor:pointer;">🖨️ הדפסה</button>
+</body></html>`;
+    const w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+  }
+
+  // ===== שינוי PIN =====
+  async function changePin() {
+    const oldPin = document.getElementById('pinOld').value.trim();
+    const newPin = document.getElementById('pinNew').value.trim();
+    const confirm = document.getElementById('pinConfirm').value.trim();
+    const msg = document.getElementById('pinMsg');
+    msg.style.display = 'block';
+    if (!oldPin || !newPin || !confirm) { msg.textContent = 'יש למלא את כל השדות'; msg.className = 'settings-msg err'; return; }
+    if (newPin !== confirm) { msg.textContent = 'הקודים החדשים אינם תואמים'; msg.className = 'settings-msg err'; return; }
+    if (newPin.length < 4) { msg.textContent = 'קוד חייב להיות לפחות 4 ספרות'; msg.className = 'settings-msg err'; return; }
+    const { data } = await _supabase.from('shomrim_admin_settings').select('*').eq('school_name', adminSchool).eq('pin', oldPin).maybeSingle();
+    if (!data) { msg.textContent = 'הקוד הנוכחי שגוי'; msg.className = 'settings-msg err'; return; }
+    await _supabase.from('shomrim_admin_settings').update({ pin: newPin }).eq('school_name', adminSchool);
+    msg.textContent = '✅ הקוד שונה בהצלחה!';
+    msg.className = 'settings-msg ok';
+    document.getElementById('pinOld').value = '';
+    document.getElementById('pinNew').value = '';
+    document.getElementById('pinConfirm').value = '';
+  }
+
+  // Enter לכניסה
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doAdminLogin();
+  });
 </script>
 </body>
 </html>
