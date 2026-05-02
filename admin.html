@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומרים — ניהול</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 10px; }
+  .header h2 { color: #1a3c6e; font-size: 20px; }
+  .logout-btn { background: none; border: none; color: #999; font-size: 14px; cursor: pointer; font-family: inherit; }
+
+  /* מסך כניסה */
+  .login-box { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+  .login-icon { font-size: 56px; margin-bottom: 12px; }
+  .login-title { font-size: 22px; font-weight: bold; color: #1a3c6e; margin-bottom: 6px; }
+  .login-sub { font-size: 14px; color: #888; margin-bottom: 24px; }
+  .login-input { width: 100%; padding: 14px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 18px; font-family: inherit; outline: none; text-align: center; letter-spacing: 6px; margin-bottom: 12px; }
+  .login-input:focus { border-color: #1a3c6e; }
+  .btn-login { width: 100%; padding: 16px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .login-error { color: #cc0000; font-size: 14px; margin-top: 10px; display: none; }
+
+  /* תוכן ראשי */
+  .main-content { width: 100%; max-width: 500px; display: none; }
+
+  /* כרטיסי סקשן */
+  .section-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .section-title { font-size: 17px; font-weight: bold; color: #1a3c6e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* כוננות */
+  .alert-status { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .alert-dot { width: 12px; height: 12px; border-radius: 50%; background: #ddd; }
+  .alert-dot.active { background: #ff7700; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .alert-status-text { font-size: 14px; color: #666; }
+  .alert-message-input { width: 100%; padding: 12px 14px; border: 2px solid #ddd; border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px; resize: none; height: 70px; }
+  .alert-message-input:focus { border-color: #ff7700; }
+  .alert-btns { display: flex; gap: 10px; }
+  .btn-alert-on { flex: 1; padding: 14px; background: #ff7700; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn-alert-off { flex: 1; padding: 14px; background: #f5f5f5; color: #666; border: 2px solid #ddd; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit; }
+
+  /* הורים ממתינים */
+  .parent-item { background: #f8f9ff; border-radius: 14px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+  .parent-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #ddd; flex-shrink: 0; }
+  .parent-avatar-placeholder { width: 48px; height: 48px; border-radius: 50%; background: #1a3c6e; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+  .parent-info { flex: 1; }
+  .parent-name { font-size: 15px; font-weight: bold; color: #1a3c6e; }
+  .parent-details { font-size: 12px; color: #888; margin-top: 2px; }
+  .parent-actions { display: flex; gap: 8px; }
+  .btn-approve { padding: 8px 14px; background: #f0fff4; color: #006622; border: 2px solid #006622; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn-reject { padding: 8px 14px; background: #fff0f0; color: #cc0000; border: 2px solid #cc0000; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .no-items { text-align: center; color: #aaa; padding: 20px; font-size: 14px; }
+
+  /* מפת חום */
+  .heatmap-item { background: #f8f9ff; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .heatmap-address { font-size: 14px; color: #333; font-weight: bold; }
+  .heatmap-details { font-size: 12px; color: #888; margin-top: 3px; }
+  .heatmap-count { background: #1a3c6e; color: white; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: bold; white-space: nowrap; }
+  .urgency-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+  .badge-critical { background: #fff0f0; color: #cc0000; }
+  .badge-high { background: #fff3e6; color: #7d3c00; }
+  .badge-low { background: #fff9e6; color: #856404; }
+
+  /* סטטיסטיקות */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .stat-box { flex: 1; background: #f0f4ff; border-radius: 14px; padding: 14px; text-align: center; }
+  .stat-num { font-size: 28px; font-weight: bold; color: #1a3c6e; }
+  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+
+  .school-label { background: #e8f0ff; color: #1a3c6e; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- מסך כניסה -->
+<div id="loginBox" class="login-box">
+  <div class="login-icon">🛡️</div>
+  <div class="login-title">ניהול שומרים</div>
+  <div class="login-sub">כניסה ליו"ר ועד הורים</div>
+  <input class="login-input" type="password" id="adminPin" placeholder="••••••" maxlength="6" inputmode="numeric">
+  <button class="btn-login" onclick="doAdminLogin()">כניסה</button>
+  <div class="login-error" id="loginError">PIN שגוי</div>
+</div>
+
+<!-- תוכן ראשי -->
+<div class="main-content" id="mainContent">
+
+  <div class="header">
+    <h2>🛡️ ניהול שומרים</h2>
+    <button class="logout-btn" onclick="adminLogout()">יציאה</button>
+  </div>
+
+  <div style="text-align:center; margin-bottom:16px;">
+    <span class="school-label" id="schoolLabel"></span>
+  </div>
+
+  <!-- סטטיסטיקות -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num" id="statParents">0</div>
+      <div class="stat-label">הורים פעילים</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statEvents">0</div>
+      <div class="stat-label">אירועים החודש</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statPending">0</div>
+      <div class="stat-label">ממתינים לאישור</div>
+    </div>
+  </div>
+
+  <!-- כוננות מוגברת -->
+  <div class="section-card">
+    <div class="section-title">⚠️ מצב כוננות</div>
+    <div class="alert-status">
+      <div class="alert-dot" id="alertDot"></div>
+      <div class="alert-status-text" id="alertStatusText">כוננות רגילה</div>
+    </div>
+    <textarea class="alert-message-input" id="alertMessage" placeholder="הודעה להורים (לדוגמה: ערב חג — אנא היו זמינים)..."></textarea>
+    <div class="alert-btns">
+      <button class="btn-alert-on" onclick="setAlert(true)">⚠️ הפעל כוננות</button>
+      <button class="btn-alert-off" onclick="setAlert(false)">✅ בטל כוננות</button>
+    </div>
+  </div>
+
+  <!-- הורים ממתינים לאישור -->
+  <div class="section-card">
+    <div class="section-title">👥 הורים ממתינים לאישור</div>
+    <div id="pendingParentsList"><div class="no-items">טוען...</div></div>
+  </div>
+
+  <!-- מפת חום -->
+  <div class="section-card">
+    <div class="section-title">🗺️ נקודות חוזרות — מפת חום</div>
+    <div id="heatmapList"><div class="no-items">טוען...</div></div>
+  </div>
+
+  <!-- היסטוריית אירועים -->
+  <div class="section-card">
+    <div class="section-title">📋 אירועים אחרונים</div>
+    <div id="eventsList"><div class="no-items">טוען...</div></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+  // PIN ניהול — ניתן לשנות
+  const ADMIN_PIN = '123456';
+  let adminSchool = null;
+
+  function doAdminLogin() {
+    const pin = document.getElementById('adminPin').value.trim();
+    if (pin !== ADMIN_PIN) {
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+    const school = prompt('שם בית הספר:');
+    if (!school || !school.trim()) return;
+    adminSchool = school.trim();
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    document.getElementById('schoolLabel').textContent = '🏫 ' + adminSchool;
+    loadAll();
+  }
+
+  function adminLogout() {
+    adminSchool = null;
+    document.getElementById('loginBox').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('adminPin').value = '';
+    document.getElementById('loginError').style.display = 'none';
+  }
+
+  async function loadAll() {
+    await Promise.all([
+      loadAlertStatus(),
+      loadPendingParents(),
+      loadHeatmap(),
+      loadRecentEvents(),
+      loadStats()
+    ]);
+  }
+
+  // כוננות
+  async function loadAlertStatus() {
+    const { data } = await _supabase
+      .from('shomrim_alert_modes')
+      .select('*')
+      .eq('school_name', adminSchool)
+      .eq('active', true)
+      .maybeSingle();
+    const dot = document.getElementById('alertDot');
+    const txt = document.getElementById('alertStatusText');
+    if (data) {
+      dot.classList.add('active');
+      txt.textContent = 'כוננות מוגברת פעילה';
+      txt.style.color = '#ff7700';
+      if (data.message) document.getElementById('alertMessage').value = data.message;
+    } else {
+      dot.classList.remove('active');
+      txt.textContent = 'כוננות רגילה';
+      txt.style.color = '#888';
+    }
+  }
+
+  async function setAlert(active) {
+    const message = document.getElementById('alertMessage').value.trim();
+    await _supabase.from('shomrim_alert_modes')
+      .delete()
+      .eq('school_name', adminSchool);
+    if (active) {
+      await _supabase.from('shomrim_alert_modes').insert([{
+        school_name: adminSchool,
+        active: true,
+        message: message || 'כוננות מוגברת — אנא היו זמינים'
+      }]);
+    }
+    await loadAlertStatus();
+  }
+
+  // הורים ממתינים
+  async function loadPendingParents() {
+    const { data } = await _supabase
+      .from('shomrim_users')
+      .select('*')
+      .eq('role', 'parent')
+      .eq('is_verified', false)
+      .eq('school_name', adminSchool)
+      .order('created_at', { ascending: false });
+    const list = document.getElementById('pendingParentsList');
+    document.getElementById('statPending').textContent = data ? data.length : 0;
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="no-items">אין הורים ממתינים לאישור ✅</div>';
+      return;
+    }
+    list.innerHTML = '';
+    data.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'parent-item';
+      item.id = `parent-${p.id}`;
+      const avatar = p.photo_url
+        ? `<img class="parent-avatar" src="${p.photo_url}">`
+        : `<div class="parent-avatar-placeholder">${p.name[0]}</div>`;
+      item.innerHTML = `
+        ${avatar}
+        <div class="parent-info">
+          <div class="parent-name">${p.name}</div>
+          <div class="parent-details">📱 ${p.phone} · 🪪 ${p.id_number || '—'}</div>
+          <div class="parent-details">✍️ ${p.agreement_name || '—'}</div>
+        </div>
+        <div class="parent-actions">
+          <button class="btn-approve" onclick="approveParent('${p.id}')">✅ אשר</button>
+          <button class="btn-reject" onclick="rejectParent('${p.id}')">❌ דחה</button>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+
+  async function approveParent(parentId) {
+    await _supabase.from('shomrim_users')
+      .update({ is_verified: true })
+      .eq('id', parentId);
+    document.getElementById(`parent-${parentId}`)?.remove();
+    const current = parseInt(document.getElementById('statPending').textContent) - 1;
+    document.getElementById('statPending').textContent = Math.max(0, current);
+    const active = parseInt(document.getElementById('statParents').textContent) + 1;
+    document.getElementById('statParents').textContent = active;
+  }
+
+  async function rejectParent(parentId) {
+    if (!confirm('למחוק את הרישום של הורה זה?')) return;
+    await _supabase.from('shomrim_users').delete().eq('id', parentId);
+    document.getElementById(`parent-${parentId}`)?.remove();
+    const current = parseInt(document.getElementById('statPending').textContent) - 1;
+    document.getElementById('statPending').textContent = Math.max(0, current);
+  }
+
+  // סטטיסטיקות
+  async function loadStats() {
+    const { count: parents } = await _supabase
+      .from('shomrim_users')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'parent')
+      .eq('is_verified', true)
+      .eq('school_name', adminSchool);
+    document.getElementById('statParents').textContent = parents || 0;
+
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const { count: events } = await _supabase
+      .from('shomrim_sos_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('school_name', adminSchool)
+      .gte('created_at', firstOfMonth);
+    document.getElementById('statEvents').textContent = events || 0;
+  }
+
+  // מפת חום
+  async function loadHeatmap() {
+    const { data } = await _supabase
+      .from('shomrim_sos_events')
+      .select('resolution_note, urgency, created_at')
+      .eq('school_name', adminSchool)
+      .not('resolution_note', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    const list = document.getElementById('heatmapList');
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="no-items">אין נתונים עדיין</div>';
+      return;
+    }
+    // ספירה לפי כתובת
+    const counts = {};
+    data.forEach(ev => {
+      const key = ev.resolution_note;
+      if (!key || key.length < 3) return;
+      if (!counts[key]) counts[key] = { count: 0, urgencies: [] };
+      counts[key].count++;
+      counts[key].urgencies.push(ev.urgency);
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1].count - a[1].count).slice(0, 8);
+    if (sorted.length === 0) {
+      list.innerHTML = '<div class="no-items">אין נתונים עדיין</div>';
+      return;
+    }
+    list.innerHTML = '';
+    sorted.forEach(([address, info]) => {
+      const hasCritical = info.urgencies.includes('critical');
+      const hasHigh = info.urgencies.includes('high');
+      const badgeClass = hasCritical ? 'badge-critical' : hasHigh ? 'badge-high' : 'badge-low';
+      const badgeText = hasCritical ? '🔴 חירום' : hasHigh ? '🟠 דחוף' : '🟡 בינוני';
+      const item = document.createElement('div');
+      item.className = 'heatmap-item';
+      item.innerHTML = `
+        <div>
+          <div class="heatmap-address">${address}</div>
+          <span class="urgency-badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="heatmap-count">${info.count} אירועים</div>`;
+      list.appendChild(item);
+    });
+  }
+
+  // אירועים אחרונים
+  async function loadRecentEvents() {
+    const { data } = await _supabase
+      .from('shomrim_sos_events')
+      .select('*, shomrim_users!child_id(name)')
+      .eq('school_name', adminSchool)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    const list = document.getElementById('eventsList');
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="no-items">אין אירועים עדיין</div>';
+      return;
+    }
+    list.innerHTML = '';
+    data.forEach(ev => {
+      const childName = ev.shomrim_users?.name || 'לא ידוע';
+      const date = new Date(ev.created_at);
+      const dateStr = `${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+      const urgencyMap = { low: '🟡', high: '🟠', critical: '🔴', pickup: '🕐' };
+      const statusMap = { open: 'פתוח', handled: 'טופל', escalated: 'הוסלם' };
+      const item = document.createElement('div');
+      item.className = 'heatmap-item';
+      item.innerHTML = `
+        <div>
+          <div class="heatmap-address">${urgencyMap[ev.urgency] || '⚪'} ${childName}</div>
+          <div class="heatmap-details">${dateStr} · ${ev.resolution_note || 'ללא כתובת'}</div>
+        </div>
+        <div style="font-size:12px; color:#888;">${statusMap[ev.status] || ev.status}</div>`;
+      list.appendChild(item);
+    });
+  }
+</script>
+</body>
+</html>
