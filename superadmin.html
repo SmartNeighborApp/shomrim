@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומרים — Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1a3c6e; --blue-light: #2e5ca8; --blue-pale: #e8f0ff;
+    --green: #006622; --green-light: #f0fff4;
+    --orange: #ff7700; --orange-light: #fff3e6;
+    --red: #cc0000; --red-light: #fff0f0;
+    --yellow: #ffc107; --yellow-light: #fff9e6;
+    --gray: #f4f6fb; --gray-mid: #e2e8f0;
+    --text: #1e2a3a; --text-soft: #64748b;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(26,60,110,0.10);
+    --radius: 18px; --radius-sm: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Heebo', sans-serif; background: var(--gray); min-height: 100vh; color: var(--text); }
+
+  /* כניסה */
+  .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a1628 0%, #0f2447 50%, #1a3c6e 100%); padding: 20px; }
+  .login-card { background: white; border-radius: 28px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 24px 80px rgba(0,0,0,0.4); text-align: center; }
+  .login-logo { font-size: 64px; margin-bottom: 8px; }
+  .login-title { font-size: 26px; font-weight: 900; color: var(--blue); margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--text-soft); margin-bottom: 8px; }
+  .sa-badge { display: inline-block; background: linear-gradient(135deg, #gold, #ffc107); background: var(--yellow-light); color: #856404; border: 2px solid var(--yellow); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700; margin-bottom: 28px; }
+  .login-input { width: 100%; padding: 14px 16px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 20px; font-family: 'Heebo', sans-serif; outline: none; text-align: center; letter-spacing: 8px; margin-bottom: 12px; background: var(--gray); transition: border 0.2s; }
+  .login-input:focus { border-color: var(--blue); background: white; }
+  .btn-login { width: 100%; padding: 16px; background: linear-gradient(135deg, #0a1628, var(--blue)); color: white; border: none; border-radius: var(--radius-sm); font-size: 17px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; box-shadow: 0 4px 16px rgba(26,60,110,0.4); transition: all 0.2s; }
+  .btn-login:hover { transform: translateY(-1px); }
+  .login-error { color: var(--red); font-size: 14px; margin-top: 10px; display: none; font-weight: 500; }
+
+  /* אפליקציה */
+  .app { display: none; min-height: 100vh; }
+  .sidebar { position: fixed; top: 0; right: 0; width: 240px; height: 100vh; background: linear-gradient(180deg, #0a1628 0%, #0f2447 100%); padding: 24px 0; z-index: 100; overflow-y: auto; }
+  .sidebar-logo { text-align: center; padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+  .sidebar-logo .icon { font-size: 36px; display: block; margin-bottom: 4px; }
+  .sidebar-logo .name { color: white; font-size: 16px; font-weight: 800; }
+  .sidebar-logo .badge { display: inline-block; background: var(--yellow); color: #333; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin-top: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; border-right: 3px solid transparent; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: white; border-right-color: var(--yellow); }
+  .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+  .main { margin-right: 240px; padding: 28px; min-height: 100vh; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .page-title { font-size: 24px; font-weight: 800; color: var(--blue); }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* כרטיסים */
+  .card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+  /* stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.orange::before { background: var(--orange); }
+  .stat-num { font-size: 36px; font-weight: 900; color: var(--blue); }
+  .stat-card.green .stat-num { color: var(--green); }
+  .stat-card.orange .stat-num { color: var(--orange); }
+  .stat-label { font-size: 13px; color: var(--text-soft); margin-top: 6px; font-weight: 500; }
+
+  /* טופס */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field label { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+  .form-input { padding: 11px 14px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Heebo', sans-serif; outline: none; transition: border 0.2s; background: var(--gray); }
+  .form-input:focus { border-color: var(--blue); background: white; }
+  .form-full { grid-column: 1 / -1; }
+  .btn-primary { padding: 13px 24px; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
+  .btn-primary:hover { background: var(--blue-light); }
+  .btn-danger { padding: 8px 14px; background: var(--red-light); color: var(--red); border: 2px solid var(--red); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .btn-success { padding: 8px 14px; background: var(--green-light); color: var(--green); border: 2px solid var(--green); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .btn-warn { padding: 8px 14px; background: var(--orange-light); color: var(--orange); border: 2px solid var(--orange); border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .btn-copy { padding: 6px 12px; background: var(--blue-pale); color: var(--blue); border: 2px solid var(--blue); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+
+  /* רשימת בתי ספר */
+  .school-card { border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; transition: all 0.2s; }
+  .school-card:hover { border-color: var(--blue); }
+  .school-card.active-school { border-color: var(--green); background: var(--green-light); }
+  .school-card.inactive-school { border-color: var(--gray-mid); background: var(--gray); opacity: 0.7; }
+  .school-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .school-logo { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: var(--gray-mid); border: 2px solid var(--gray-mid); flex-shrink: 0; }
+  .school-logo-ph { width: 44px; height: 44px; border-radius: 10px; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0; }
+  .school-name { font-size: 16px; font-weight: 700; color: var(--text); }
+  .school-city { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+  .school-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .meta-tag { background: var(--blue-pale); color: var(--blue); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+  .meta-tag.red { background: var(--red-light); color: var(--red); }
+  .meta-tag.green { background: var(--green-light); color: var(--green); }
+  .meta-tag.orange { background: var(--orange-light); color: var(--orange); }
+  .token-row { display: flex; align-items: center; gap: 8px; background: var(--gray); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+  .token-text { font-size: 13px; font-weight: 700; color: var(--text); font-family: monospace; flex: 1; }
+  .school-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* הגדרות */
+  .settings-card { background: white; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); max-width: 440px; margin-bottom: 20px; }
+  .settings-title { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 16px; }
+  .settings-field { margin-bottom: 12px; }
+  .settings-field label { display: block; font-size: 13px; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+  .settings-input { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 15px; font-family: 'Heebo', sans-serif; outline: none; letter-spacing: 4px; text-align: center; }
+  .settings-input:focus { border-color: var(--blue); }
+  .msg { font-size: 13px; margin-top: 10px; display: none; font-weight: 600; }
+  .msg.ok { color: var(--green); }
+  .msg.err { color: var(--red); }
+
+  .upload-area { border: 2px dashed var(--gray-mid); border-radius: var(--radius-sm); padding: 16px; text-align: center; cursor: pointer; transition: border 0.2s; margin-bottom: 8px; }
+  .upload-area:hover { border-color: var(--blue); }
+  .upload-preview { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; display: none; margin: 0 auto 6px; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--text-soft); font-size: 14px; }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 200px; }
+    .main { margin-right: 200px; padding: 16px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- מסך כניסה -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">Super Admin</div>
+    <div class="login-sub">מרכז ניהול ראשי — שומרים</div>
+    <div class="sa-badge">⭐ גישה מוגבלת</div>
+    <input class="login-input" type="password" id="saPin" placeholder="••••••" maxlength="8" inputmode="numeric">
+    <button class="btn-login" onclick="doSALogin()">כניסה</button>
+    <div class="login-error" id="loginError">❌ סיסמה שגויה</div>
+  </div>
+</div>
+
+<!-- אפליקציה -->
+<div class="app" id="appMain">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <span class="icon">🛡️</span>
+      <div class="name">שומרים</div>
+      <div class="badge">⭐ Super Admin</div>
+    </div>
+    <div class="nav-item active" onclick="showSec('dashboard', this)"><span class="nav-icon">📊</span> דשבורד</div>
+    <div class="nav-item" onclick="showSec('schools', this)"><span class="nav-icon">🏫</span> בתי ספר</div>
+    <div class="nav-item" onclick="showSec('add', this)"><span class="nav-icon">➕</span> הוספת בית ספר</div>
+    <div class="nav-item" onclick="showSec('settings', this)"><span class="nav-icon">⚙️</span> הגדרות</div>
+    <div class="nav-item" onclick="saLogout()" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1);"><span class="nav-icon">🚪</span> יציאה</div>
+  </div>
+
+  <div class="main">
+
+    <!-- דשבורד -->
+    <div class="section active" id="sec-dashboard">
+      <div class="page-header">
+        <div class="page-title">📊 דשבורד ראשי</div>
+        <div style="font-size:13px; color:var(--text-soft); background:white; padding:8px 14px; border-radius:20px; box-shadow:var(--shadow);" id="saDate"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-num" id="statTotal">—</div>
+          <div class="stat-label">סה"כ בתי ספר</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-num" id="statActive">—</div>
+          <div class="stat-label">פעילים</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-num" id="statInactive">—</div>
+          <div class="stat-label">לא פעילים</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏫 בתי ספר פעילים</div>
+        <div id="dashSchools"><div class="empty-state">טוען...</div></div>
+      </div>
+    </div>
+
+    <!-- בתי ספר -->
+    <div class="section" id="sec-schools">
+      <div class="page-header">
+        <div class="page-title">🏫 כל בתי הספר</div>
+      </div>
+      <div class="card">
+        <div id="allSchools"><div class="empty-state">טוען...</div></div>
+      </div>
+    </div>
+
+    <!-- הוספת בית ספר -->
+    <div class="section" id="sec-add">
+      <div class="page-header">
+        <div class="page-title">➕ הוספת בית ספר חדש</div>
+      </div>
+      <div class="card">
+        <div class="card-title">פרטי בית הספר</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>🏫 שם בית הספר</label>
+            <input class="form-input" type="text" id="newSchoolName" placeholder="לדוגמה: יחידני ממ״ד">
+          </div>
+          <div class="form-field">
+            <label>🏙️ עיר</label>
+            <input class="form-input" type="text" id="newCity" placeholder="לדוגמה: יבנה">
+          </div>
+          <div class="form-field">
+            <label>👤 איש קשר</label>
+            <input class="form-input" type="text" id="newContact" placeholder="שם יו״ר ועד">
+          </div>
+          <div class="form-field">
+            <label>📱 טלפון איש קשר</label>
+            <input class="form-input" type="tel" id="newPhone" placeholder="05X-XXXXXXX">
+          </div>
+          <div class="form-field">
+            <label>📅 תאריך תפוגה</label>
+            <input class="form-input" type="date" id="newExpiry">
+          </div>
+          <div class="form-field">
+            <label>🔑 קוד הרשמה (Token)</label>
+            <div style="display:flex; gap:8px;">
+              <input class="form-input" type="text" id="newToken" placeholder="אוטומטי או הכנס ידנית" style="flex:1;">
+              <button class="btn-primary" onclick="generateToken()" style="white-space:nowrap; padding:11px 14px;">🎲 צור</button>
+            </div>
+          </div>
+          <div class="form-field form-full">
+            <label>🖼️ לוגו בית הספר</label>
+            <div class="upload-area" onclick="document.getElementById('logoInput').click()">
+              <img id="logoPreview" class="upload-preview">
+              <div id="uploadIcon">📷 לחץ להעלאת לוגו</div>
+              <div style="font-size:11px; color:var(--text-soft); margin-top:4px;">PNG / JPG · מומלץ ריבועי</div>
+            </div>
+            <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewLogo(this)">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addSchool()" style="width:100%; padding:15px;">➕ הוסף בית ספר</button>
+        <div class="msg" id="addMsg"></div>
+      </div>
+    </div>
+
+    <!-- הגדרות -->
+    <div class="section" id="sec-settings">
+      <div class="page-header"><div class="page-title">⚙️ הגדרות Super Admin</div></div>
+      <div class="settings-card">
+        <div class="settings-title">🔑 שינוי סיסמת Super Admin</div>
+        <div class="settings-field">
+          <label>סיסמה נוכחית</label>
+          <input class="settings-input" type="password" id="saOld" placeholder="••••••" maxlength="8">
+        </div>
+        <div class="settings-field">
+          <label>סיסמה חדשה</label>
+          <input class="settings-input" type="password" id="saNew" placeholder="••••••" maxlength="8">
+        </div>
+        <div class="settings-field">
+          <label>אישור סיסמה חדשה</label>
+          <input class="settings-input" type="password" id="saConfirm" placeholder="••••••" maxlength="8">
+        </div>
+        <button class="btn-primary" onclick="changeSAPin()">שמור סיסמה חדשה</button>
+        <div class="msg" id="saMsg"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+
+  // ===== כניסה =====
+  async function doSALogin() {
+    const pin = document.getElementById('saPin').value.trim();
+    if (!pin) return;
+    const { data } = await _supabase
+      .from('shomrim_admin_settings')
+      .select('*')
+      .eq('school_name', 'SUPERADMIN')
+      .eq('pin', pin)
+      .maybeSingle();
+    if (!data) {
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appMain').style.display = 'block';
+    document.getElementById('saDate').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    loadAll();
+  }
+
+  function saLogout() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appMain').style.display = 'none';
+    document.getElementById('saPin').value = '';
+    document.getElementById('loginError').style.display = 'none';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doSALogin();
+  });
+
+  // ===== ניווט =====
+  function showSec(name, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    if (el) el.classList.add('active');
+  }
+
+  // ===== טעינה =====
+  async function loadAll() {
+    await loadSchools();
+  }
+
+  async function loadSchools() {
+    const { data } = await _supabase.from('shomrim_schools').select('*').order('created_at', { ascending: false });
+    const schools = data || [];
+    const active = schools.filter(s => s.active);
+    const inactive = schools.filter(s => !s.active);
+    document.getElementById('statTotal').textContent = schools.length;
+    document.getElementById('statActive').textContent = active.length;
+    document.getElementById('statInactive').textContent = inactive.length;
+    renderSchools(active, 'dashSchools', true);
+    renderSchools(schools, 'allSchools', false);
+  }
+
+  function renderSchools(schools, containerId, mini) {
+    const container = document.getElementById(containerId);
+    if (!schools.length) { container.innerHTML = '<div class="empty-state">אין בתי ספר עדיין</div>'; return; }
+    container.innerHTML = '';
+    schools.forEach(s => {
+      const expires = s.expires_at ? new Date(s.expires_at).toLocaleDateString('he-IL') : '—';
+      const isExpired = s.expires_at && new Date(s.expires_at) < new Date();
+      const card = document.createElement('div');
+      card.className = `school-card ${s.active ? 'active-school' : 'inactive-school'}`;
+      card.id = `school-${s.id}`;
+      const logo = s.logo_url
+        ? `<img class="school-logo" src="${s.logo_url}">`
+        : `<div class="school-logo-ph">${s.school_name[0]}</div>`;
+      card.innerHTML = `
+        <div class="school-top">
+          ${logo}
+          <div>
+            <div class="school-name">${s.school_name}</div>
+            <div class="school-city">🏙️ ${s.city}</div>
+          </div>
+          <div style="margin-right:auto; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <span class="meta-tag ${s.active ? 'green' : 'red'}">${s.active ? '✅ פעיל' : '⛔ לא פעיל'}</span>
+            ${isExpired ? '<span class="meta-tag red">⚠️ פג תוקף</span>' : ''}
+          </div>
+        </div>
+        <div class="school-meta">
+          <span class="meta-tag">👤 ${s.contact_name || '—'}</span>
+          <span class="meta-tag">📅 תפוגה: ${expires}</span>
+        </div>
+        <div class="token-row">
+          <span style="font-size:12px; color:var(--text-soft);">🔑 Token:</span>
+          <span class="token-text">${s.token}</span>
+          <button class="btn-copy" onclick="copyLink('${s.token}')">📋 העתק לינק</button>
+        </div>
+        ${!mini ? `<div class="school-actions">
+          ${s.active
+            ? `<button class="btn-warn" onclick="toggleSchool('${s.id}', false)">⏸ כבה</button>`
+            : `<button class="btn-success" onclick="toggleSchool('${s.id}', true)">▶️ הפעל</button>`}
+          <button class="btn-primary" onclick="openEditSchool('${s.id}')">✏️ עריכה</button>
+          <button class="btn-danger" onclick="deleteSchool('${s.id}')">🗑️ מחק</button>
+        </div>` : ''}`;
+      container.appendChild(card);
+    });
+  }
+
+  // ===== פעולות =====
+  async function toggleSchool(id, active) {
+    await _supabase.from('shomrim_schools').update({ active }).eq('id', id);
+    await loadSchools();
+  }
+
+  async function deleteSchool(id) {
+    if (!confirm('למחוק בית ספר זה לצמיתות?')) return;
+    await _supabase.from('shomrim_schools').delete().eq('id', id);
+    await loadSchools();
+  }
+
+  function copyLink(token) {
+    const url = `${window.location.origin}/shomrim/index.html?token=${token}`;
+    navigator.clipboard.writeText(url).then(() => alert('✅ הלינק הועתק!\n' + url));
+  }
+
+  // ===== הוספת בית ספר =====
+  function generateToken() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let token = '';
+    for (let i = 0; i < 8; i++) token += chars[Math.floor(Math.random() * chars.length)];
+    document.getElementById('newToken').value = token;
+  }
+
+  let newLogoFile = null;
+
+  function previewLogo(input) {
+    if (input.files && input.files[0]) {
+      newLogoFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.getElementById('logoPreview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        document.getElementById('uploadIcon').textContent = '✅ לוגו נבחר';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  async function addSchool() {
+    const name = document.getElementById('newSchoolName').value.trim();
+    const city = document.getElementById('newCity').value.trim();
+    const token = document.getElementById('newToken').value.trim();
+    const contact = document.getElementById('newContact').value.trim();
+    const phone = document.getElementById('newPhone').value.trim();
+    const expiry = document.getElementById('newExpiry').value;
+    const msg = document.getElementById('addMsg');
+    msg.style.display = 'block';
+    if (!name || !city || !token) { msg.textContent = '❌ יש למלא שם, עיר וקוד הרשמה'; msg.className = 'msg err'; return; }
+    let logo_url = null;
+    if (newLogoFile) {
+      const fileName = `school_${Date.now()}_${token}.png`;
+      const { error: uploadErr } = await _supabase.storage.from('shomrim-photos').upload(fileName, newLogoFile, { upsert: true });
+      if (!uploadErr) {
+        const { data: urlData } = _supabase.storage.from('shomrim-photos').getPublicUrl(fileName);
+        logo_url = urlData.publicUrl;
+      }
+    }
+    const { error } = await _supabase.from('shomrim_schools').insert([{
+      school_name: name, city, token, contact_name: contact, contact_phone: phone,
+      expires_at: expiry || null, active: true, logo_url
+    }]);
+    if (error) {
+      msg.textContent = error.code === '23505' ? '❌ Token כבר קיים — צור token חדש' : '❌ שגיאה: ' + error.message;
+      msg.className = 'msg err';
+      return;
+    }
+    // יצירת הגדרות אדמין לבית הספר
+    await _supabase.from('shomrim_admin_settings').insert([{ school_name: name, pin: '123456' }]).select();
+    msg.textContent = `✅ בית הספר "${name}" נוסף! PIN אדמין ברירת מחדל: 123456`;
+    msg.className = 'msg ok';
+    document.getElementById('newSchoolName').value = '';
+    document.getElementById('newCity').value = '';
+    document.getElementById('newToken').value = '';
+    document.getElementById('newContact').value = '';
+    document.getElementById('newPhone').value = '';
+    document.getElementById('newExpiry').value = '';
+    newLogoFile = null;
+    document.getElementById('logoPreview').style.display = 'none';
+    document.getElementById('uploadIcon').textContent = '📷 לחץ להעלאת לוגו';
+    await loadSchools();
+  }
+
+  // ===== עריכת בית ספר =====
+  async function openEditSchool(id) {
+    const { data: s } = await _supabase.from('shomrim_schools').select('*').eq('id', id).single();
+    if (!s) return;
+    const newExpiry = prompt('תאריך תפוגה חדש (YYYY-MM-DD):', s.expires_at ? s.expires_at.slice(0, 10) : '');
+    if (newExpiry === null) return;
+    const newContact = prompt('שם איש קשר:', s.contact_name || '');
+    if (newContact === null) return;
+    await _supabase.from('shomrim_schools').update({ expires_at: newExpiry || null, contact_name: newContact }).eq('id', id);
+    await loadSchools();
+  }
+
+  // ===== שינוי סיסמה =====
+  async function changeSAPin() {
+    const oldPin = document.getElementById('saOld').value.trim();
+    const newPin = document.getElementById('saNew').value.trim();
+    const confirm = document.getElementById('saConfirm').value.trim();
+    const msg = document.getElementById('saMsg');
+    msg.style.display = 'block';
+    if (!oldPin || !newPin || !confirm) { msg.textContent = 'יש למלא את כל השדות'; msg.className = 'msg err'; return; }
+    if (newPin !== confirm) { msg.textContent = 'הסיסמאות החדשות אינן תואמות'; msg.className = 'msg err'; return; }
+    if (newPin.length < 4) { msg.textContent = 'סיסמה חייבת להיות לפחות 4 ספרות'; msg.className = 'msg err'; return; }
+    const { data } = await _supabase.from('shomrim_admin_settings').select('*').eq('school_name', 'SUPERADMIN').eq('pin', oldPin).maybeSingle();
+    if (!data) { msg.textContent = 'הסיסמה הנוכחית שגויה'; msg.className = 'msg err'; return; }
+    await _supabase.from('shomrim_admin_settings').update({ pin: newPin }).eq('school_name', 'SUPERADMIN');
+    msg.textContent = '✅ הסיסמה שונתה בהצלחה!';
+    msg.className = 'msg ok';
+    document.getElementById('saOld').value = '';
+    document.getElementById('saNew').value = '';
+    document.getElementById('saConfirm').value = '';
+  }
+
+  // הגדרת תאריך ברירת מחדל לשנה מהיום
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + 1);
+  document.getElementById('newExpiry').value = d.toISOString().slice(0, 10);
+</script>
+</body>
+</html>
