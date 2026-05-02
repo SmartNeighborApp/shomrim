@@ -34,6 +34,13 @@
   .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; display: none; margin: 0 auto 8px; }
   .upload-icon { font-size: 32px; margin-bottom: 4px; }
   .upload-text { font-size: 13px; color: #888; }
+  .agreement-box { background: #f8f9ff; border: 2px solid #1a3c6e; border-radius: 16px; padding: 20px; margin-bottom: 16px; display: none; }
+  .agreement-title { font-size: 16px; font-weight: bold; color: #1a3c6e; margin-bottom: 12px; text-align: center; }
+  .agreement-clause { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .agreement-clause input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+  .agreement-clause span { font-size: 13px; color: #333; line-height: 1.5; cursor: pointer; }
+  .agreement-sign { width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; outline: none; margin-top: 8px; }
+  .agreement-sign:focus { border-color: #1a3c6e; }
 </style>
 </head>
 <body>
@@ -133,6 +140,31 @@
       <label>🔑 PIN (4 ספרות אחרונות של הטלפון)</label>
       <input type="password" id="regPin" placeholder="••••" maxlength="4" inputmode="numeric">
     </div>
+    <div class="agreement-box" id="agreementBox">
+      <div class="agreement-title">📋 הסכם הורה מתנדב</div>
+      <div class="agreement-clause">
+        <input type="checkbox" id="agr1">
+        <span>אני פועל/ת כאזרח פרטי בלבד — לא כנציג בית הספר או האפליקציה</span>
+      </div>
+      <div class="agreement-clause">
+        <input type="checkbox" id="agr2">
+        <span>אני מתחייב/ת לפרוטוקול: ראה, נכח, דווח — לא להתערב פיזית</span>
+      </div>
+      <div class="agreement-clause">
+        <input type="checkbox" id="agr3">
+        <span>אני מתחייב/ת לתעד כל אירוע באפליקציה תוך 24 שעות</span>
+      </div>
+      <div class="agreement-clause">
+        <input type="checkbox" id="agr4">
+        <span>אני מתחייב/ת לסודיות — לא לשתף פרטי ילדים עם גורמים חיצוניים</span>
+      </div>
+      <div class="agreement-clause">
+        <input type="checkbox" id="agr5">
+        <span>אם תיפתח נגדי חקירה פלילית — אודיע מיד ואפרוש מהרשת</span>
+      </div>
+      <label style="display:block; font-size:13px; color:#444; font-weight:bold; margin-top:12px; margin-bottom:6px;">✍️ שם מלא לאישור (חתימה דיגיטלית)</label>
+      <input class="agreement-sign" type="text" id="agreementName" placeholder="כתוב שם מלא לאישור">
+    </div>
     <button class="btn-primary" onclick="doRegister()">הרשמה</button>
   </div>
 </div>
@@ -167,6 +199,7 @@
     document.getElementById('classGroup').style.display = role === 'child' ? 'block' : 'none';
     document.getElementById('schoolChildGroup').style.display = role === 'child' ? 'block' : 'none';
     document.getElementById('schoolParentGroup').style.display = role === 'parent' ? 'block' : 'none';
+    document.getElementById('agreementBox').style.display = role === 'parent' ? 'block' : 'none';
   }
 
   function previewPhoto(input) {
