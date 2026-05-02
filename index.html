@@ -41,13 +41,24 @@
   .agreement-clause span { font-size: 13px; color: #333; line-height: 1.5; cursor: pointer; }
   .agreement-sign { width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; outline: none; margin-top: 8px; }
   .agreement-sign:focus { border-color: #1a3c6e; }
+  .school-header { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; }
+  .school-logo-display { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 2px solid #e0e0e0; display: none; }
+  .school-divider { width: 2px; height: 40px; background: #ddd; display: none; }
+  .school-name-display { font-size: 14px; font-weight: bold; color: #1a3c6e; display: none; text-align: center; }
+  .token-error { background: #fff0f0; border: 2px solid #cc0000; border-radius: 16px; padding: 20px; text-align: center; color: #cc0000; font-weight: bold; display: none; }
 </style>
 </head>
 <body>
 
-<div class="logo">🛡️</div>
+<div class="school-header">
+  <div class="logo" style="font-size:52px; margin:0;">🛡️</div>
+  <div class="school-divider" id="schoolDivider"></div>
+  <img class="school-logo-display" id="schoolLogoDisplay">
+</div>
 <h1>שומרים</h1>
-<p class="tagline">רשת הורים מגינה על ילדים</p>
+<div class="school-name-display" id="schoolNameDisplay"></div>
+<p class="tagline" id="mainTagline">רשת הורים מגינה על ילדים</p>
+<div class="token-error" id="tokenError">⛔ לינק הרשמה לא תקין או פג תוקף.<br>פנה למנהל בית הספר לקבלת לינק חדש.</div>
 
 <div class="card">
   <div class="tabs">
@@ -105,10 +116,6 @@
       <label>🏫 כיתה</label>
       <input type="text" id="regClass" placeholder="לדוגמה: ד׳2">
     </div>
-    <div class="form-group" id="schoolChildGroup">
-      <label>🏫 שם בית הספר</label>
-      <input type="text" id="regSchoolChild" placeholder="שם בית הספר">
-    </div>
     <div class="form-group" id="parentPhoneGroup">
       <label>📱 טלפון הורה (לאישור)</label>
       <input type="tel" id="regParentPhone" placeholder="05X-XXXXXXX" maxlength="10">
@@ -131,10 +138,6 @@
         <div class="upload-text" id="uploadText">לחץ להעלאת תמונה</div>
       </div>
       <input type="file" id="regPhoto" accept="image/*" capture="user" style="display:none" onchange="previewPhoto(this)">
-    </div>
-    <div class="form-group" id="schoolParentGroup" style="display:none">
-      <label>🏫 שם בית הספר</label>
-      <input type="text" id="regSchoolParent" placeholder="שם בית הספר">
     </div>
     <div class="form-group">
       <label>🔑 PIN (4 ספרות אחרונות של הטלפון)</label>
@@ -197,8 +200,6 @@
     document.getElementById('declarationGroup').style.display = role === 'parent' ? 'block' : 'none';
     document.getElementById('photoGroup').style.display = role === 'parent' ? 'block' : 'none';
     document.getElementById('classGroup').style.display = role === 'child' ? 'block' : 'none';
-    document.getElementById('schoolChildGroup').style.display = role === 'child' ? 'block' : 'none';
-    document.getElementById('schoolParentGroup').style.display = role === 'parent' ? 'block' : 'none';
     document.getElementById('agreementBox').style.display = role === 'parent' ? 'block' : 'none';
   }
 
@@ -228,6 +229,50 @@
     el.textContent = msg;
     el.style.display = 'block';
   }
+
+  // בדיקת token מה-URL
+  window.registrationSchool = null;
+  window.registrationSchoolData = null;
+
+  (async () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (!token) {
+      // אין token — כניסה בלבד, הסתרת הרשמה
+      document.querySelectorAll('.tab')[1].style.display = 'none';
+      return;
+    }
+    const { data: school } = await _supabase
+      .from('shomrim_schools')
+      .select('*')
+      .eq('token', token)
+      .eq('active', true)
+      .maybeSingle();
+    if (!school) {
+      document.getElementById('tokenError').style.display = 'block';
+      document.querySelector('.card').style.display = 'none';
+      document.getElementById('mainTagline').style.display = 'none';
+      return;
+    }
+    if (school.expires_at && new Date(school.expires_at) < new Date()) {
+      document.getElementById('tokenError').style.display = 'block';
+      document.querySelector('.card').style.display = 'none';
+      document.getElementById('mainTagline').style.display = 'none';
+      return;
+    }
+    window.registrationSchool = school.school_name;
+    window.registrationSchoolData = school;
+    document.getElementById('schoolNameDisplay').textContent = '🏫 ' + school.school_name + ' — ' + school.city;
+    document.getElementById('schoolNameDisplay').style.display = 'block';
+    document.getElementById('mainTagline').style.display = 'none';
+    if (school.logo_url) {
+      document.getElementById('schoolLogoDisplay').src = school.logo_url;
+      document.getElementById('schoolLogoDisplay').style.display = 'block';
+      document.getElementById('schoolDivider').style.display = 'block';
+    }
+    // פתיחת טאב הרשמה אוטומטית
+    showTab('register');
+  })();
 </script>
 </body>
 </html>
