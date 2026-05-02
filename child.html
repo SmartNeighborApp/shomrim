@@ -344,31 +344,23 @@
     await triggerSOS(session, currentUrgency, photoFile);
   }
 
-  async function updateResponders(count) {
+  function updateResponders(responders) {
+    const count = responders.length;
     document.getElementById('respondersCount').textContent = count;
     if (count > 0) {
       document.getElementById('statusSub').textContent = 'הורים בדרך אליך! 💪';
     }
-    if (currentEventId) {
-      const { data: responders } = await _supabase
-        .from('shomrim_responders')
-        .select('parent_name, parent_photo')
-        .eq('event_id', currentEventId)
-        .eq('status', 'coming');
-      const list = document.getElementById('respondersList');
-      list.innerHTML = '';
-      if (responders && responders.length > 0) {
-        responders.forEach(r => {
-          const item = document.createElement('div');
-          item.className = 'responder-item';
-          const avatar = r.parent_photo
-            ? `<img class="responder-avatar" src="${r.parent_photo}">`
-            : `<div class="responder-avatar-placeholder">${(r.parent_name || '?')[0]}</div>`;
-          item.innerHTML = `${avatar}<div><div class="responder-name">${r.parent_name || 'הורה'}</div><div class="responder-status">🚗 בדרך אליך</div></div>`;
-          list.appendChild(item);
-        });
-      }
-    }
+    const list = document.getElementById('respondersList');
+    list.innerHTML = '';
+    responders.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'responder-item';
+      const avatar = r.parent_photo
+        ? `<img class="responder-avatar" src="${r.parent_photo}">`
+        : `<div class="responder-avatar-placeholder">${(r.parent_name || '?')[0]}</div>`;
+      item.innerHTML = `${avatar}<div><div class="responder-name">${r.parent_name || 'הורה'}</div><div class="responder-status">🚗 בדרך אליך</div></div>`;
+      list.appendChild(item);
+    });
   }
 
   async function cancelSOS() {
