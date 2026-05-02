@@ -85,6 +85,27 @@
   .lb-ambulance { background: #fff0f0; color: #cc0000; }
   .lb-fire { background: #fff5e6; color: #cc5500; }
 
+  /* כפתור pickup */
+  .pickup-btn { width: 100%; max-width: 400px; padding: 16px; background: #f0f4ff; color: #1a3c6e; border: 2px solid #1a3c6e; border-radius: 16px; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .pickup-btn:active { transform: scale(0.98); }
+
+  /* פאנל pickup */
+  .pickup-who-btns { display: flex; gap: 12px; margin-bottom: 16px; }
+  .pickup-who-btn { flex: 1; padding: 16px; border: 2px solid #ddd; border-radius: 12px; background: white; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; text-align: center; transition: all 0.2s; }
+  .pickup-who-btn.selected { border-color: #1a3c6e; background: #f0f4ff; }
+  .pickup-search { width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; outline: none; margin-bottom: 10px; }
+  .pickup-search:focus { border-color: #1a3c6e; }
+  .pickup-results { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 160px; overflow-y: auto; }
+  .pickup-result-item { padding: 12px 14px; border: 2px solid #ddd; border-radius: 12px; cursor: pointer; font-size: 14px; background: white; transition: all 0.2s; }
+  .pickup-result-item:hover { border-color: #1a3c6e; background: #f0f4ff; }
+  .pickup-address { background: #f0f4ff; border-radius: 12px; padding: 12px 14px; font-size: 14px; color: #1a3c6e; margin-bottom: 12px; display: none; }
+  .pickup-address-edit { width: 100%; padding: 10px 14px; border: 2px solid #ddd; border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px; display: none; }
+  .btn-send-pickup { width: 100%; padding: 16px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn-send-pickup:active { transform: scale(0.98); }
+
+  /* toast תודה לילד */
+  .child-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1a3c6e; color: white; padding: 14px 24px; border-radius: 16px; font-size: 15px; font-weight: bold; z-index: 2000; display: none; text-align: center; max-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+
   /* חיוג מהיר */
   .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .emergency-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 14px; text-align: center; }
@@ -127,6 +148,36 @@
     <span>לחץ לעזרה</span>
   </button>
 </div>
+
+<!-- כפתור עדכון הורה לאיסוף -->
+<button class="pickup-btn" id="pickupBtn" onclick="startPickup()">🕐 עדכון הורה לאיסוף ילד/ה</button>
+
+<!-- פאנל pickup -->
+<div class="panel" id="pickupPanel">
+  <div class="panel-title">🕐 עדכון הורה לאיסוף</div>
+  <div style="font-size:14px; color:#666; margin-bottom:14px; text-align:center;">מי ממתין לאיסוף?</div>
+  <div class="pickup-who-btns">
+    <button class="pickup-who-btn" id="pickupMe" onclick="selectPickupWho('me')">👤 אני</button>
+    <button class="pickup-who-btn" id="pickupOther" onclick="selectPickupWho('other')">🧒 ילד אחר</button>
+  </div>
+  <div id="pickupSearchArea" style="display:none">
+    <input class="pickup-search" id="pickupSearchInput" placeholder="שם הילד..." oninput="searchPickupChild(this.value)">
+    <input class="pickup-search" id="pickupClassInput" placeholder="כיתה (לדוגמה: ד׳2)" style="margin-bottom:0">
+    <button style="width:100%;padding:10px;background:#f0f4ff;border:2px solid #1a3c6e;border-radius:12px;font-size:14px;font-weight:bold;color:#1a3c6e;cursor:pointer;font-family:inherit;margin:8px 0;" onclick="searchPickupChild(document.getElementById('pickupSearchInput').value)">🔍 חפש</button>
+    <div class="pickup-results" id="pickupResults"></div>
+  </div>
+  <div class="pickup-address" id="pickupAddressBox"></div>
+  <input class="pickup-address-edit" id="pickupAddressEdit" placeholder="הכנס כתובת ידנית...">
+  <div id="pickupAddressActions" style="display:none; margin-bottom:12px;">
+    <button style="width:48%;padding:10px;background:#f0fff4;border:2px solid #006622;border-radius:12px;font-size:13px;font-weight:bold;color:#006622;cursor:pointer;font-family:inherit;margin-left:2%;" onclick="confirmPickupAddress()">✅ כתובת נכונה</button>
+    <button style="width:48%;padding:10px;background:#fff0f0;border:2px solid #cc0000;border-radius:12px;font-size:13px;font-weight:bold;color:#cc0000;cursor:pointer;font-family:inherit;" onclick="editPickupAddress()">✏️ שנה כתובת</button>
+  </div>
+  <button class="btn-send-pickup" id="sendPickupBtn" style="display:none" onclick="sendPickupAlert()">📨 שלח עדכון להורה</button>
+  <button style="width:100%;padding:12px;background:white;border:2px solid #ddd;border-radius:12px;font-size:14px;color:#999;cursor:pointer;font-family:inherit;margin-top:10px;" onclick="cancelPickup()">ביטול</button>
+</div>
+
+<!-- toast תודה לילד -->
+<div class="child-toast" id="childToast"></div>
 
 <!-- בחירת סוג המצב -->
 <div class="panel" id="urgencyPanel">
@@ -362,6 +413,161 @@
       list.appendChild(item);
     });
   }
+
+  // ---- פיצ'ר pickup ----
+  const CHILD_THANKS = [
+    'הקהילה שלך שומרת עליך 💙',
+    'לא היית לבד היום. אנחנו כאן תמיד.',
+    'אמיץ שביקשת עזרה. זה הדבר הנכון לעשות.',
+    'מישהו דאג לך היום. כי אתה חשוב.',
+    'הקהילה שלך ראתה אותך. תמיד.',
+    'לא צריך להתמודד לבד — יש לך שומרים.'
+  ];
+
+  let pickupWho = null;
+  let pickupTargetChildId = null;
+  let pickupAddress = null;
+
+  function startPickup() {
+    pickupWho = null;
+    pickupTargetChildId = null;
+    pickupAddress = null;
+    document.getElementById('pickupMe').classList.remove('selected');
+    document.getElementById('pickupOther').classList.remove('selected');
+    document.getElementById('pickupSearchArea').style.display = 'none';
+    document.getElementById('pickupAddressBox').style.display = 'none';
+    document.getElementById('pickupAddressEdit').style.display = 'none';
+    document.getElementById('pickupAddressActions').style.display = 'none';
+    document.getElementById('sendPickupBtn').style.display = 'none';
+    document.getElementById('pickupResults').innerHTML = '';
+    document.getElementById('pickupPanel').classList.add('active');
+    document.getElementById('pickupBtn').style.display = 'none';
+  }
+
+  function cancelPickup() {
+    document.getElementById('pickupPanel').classList.remove('active');
+    document.getElementById('pickupBtn').style.display = 'flex';
+  }
+
+  function selectPickupWho(who) {
+    pickupWho = who;
+    document.getElementById('pickupMe').classList.toggle('selected', who === 'me');
+    document.getElementById('pickupOther').classList.toggle('selected', who === 'other');
+    document.getElementById('pickupSearchArea').style.display = who === 'other' ? 'block' : 'none';
+    if (who === 'me') {
+      pickupTargetChildId = session.id;
+      getPickupLocation();
+    }
+  }
+
+  async function searchPickupChild(name) {
+    if (!name || name.length < 2) return;
+    const classVal = document.getElementById('pickupClassInput').value.trim();
+    let query = _supabase.from('shomrim_users').select('id, name, class_name, school_name').eq('role', 'child').ilike('name', `%${name}%`);
+    if (classVal) query = query.ilike('class_name', `%${classVal}%`);
+    const { data } = await query.limit(5);
+    const results = document.getElementById('pickupResults');
+    results.innerHTML = '';
+    if (!data || data.length === 0) {
+      results.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:8px;">לא נמצאו תוצאות</div>';
+      return;
+    }
+    data.forEach(child => {
+      const item = document.createElement('div');
+      item.className = 'pickup-result-item';
+      item.textContent = `${child.name} — כיתה ${child.class_name || '?'}`;
+      item.onclick = () => {
+        pickupTargetChildId = child.id;
+        document.getElementById('pickupResults').innerHTML = `<div style="background:#f0fff4;border:2px solid #006622;border-radius:12px;padding:12px;font-size:14px;font-weight:bold;color:#006622;">✅ נבחר: ${child.name}</div>`;
+        getPickupLocation();
+      };
+      results.appendChild(item);
+    });
+  }
+
+  async function getPickupLocation() {
+    const box = document.getElementById('pickupAddressBox');
+    box.style.display = 'block';
+    box.textContent = '📍 מאתר מיקום...';
+    document.getElementById('pickupAddressActions').style.display = 'none';
+    document.getElementById('sendPickupBtn').style.display = 'none';
+    let lat = null, lng = null;
+    try {
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 15000, enableHighAccuracy: true })
+      );
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+    } catch (e) {
+      try {
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch (e2) {}
+    }
+    if (lat && lng) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=he`);
+        const data = await res.json();
+        const a = data.address;
+        const road = a.road || a.pedestrian || a.footway || a.suburb || '';
+        const house = a.house_number ? ' ' + a.house_number : '';
+        const city = a.city || a.town || a.village || '';
+        pickupAddress = [road + house, city].filter(p => p.trim()).join(', ') || 'כתובת לא זמינה';
+      } catch (e) { pickupAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
+    } else {
+      pickupAddress = null;
+    }
+    if (pickupAddress) {
+      box.textContent = `📍 ${pickupAddress}`;
+      document.getElementById('pickupAddressActions').style.display = 'flex';
+    } else {
+      box.textContent = '📍 לא הצלחנו לאתר מיקום';
+      editPickupAddress();
+    }
+  }
+
+  function confirmPickupAddress() {
+    document.getElementById('pickupAddressActions').style.display = 'none';
+    document.getElementById('sendPickupBtn').style.display = 'block';
+  }
+
+  function editPickupAddress() {
+    document.getElementById('pickupAddressEdit').style.display = 'block';
+    document.getElementById('pickupAddressEdit').value = pickupAddress || '';
+    document.getElementById('pickupAddressActions').style.display = 'none';
+    document.getElementById('sendPickupBtn').style.display = 'block';
+    document.getElementById('sendPickupBtn').onclick = () => {
+      pickupAddress = document.getElementById('pickupAddressEdit').value.trim() || pickupAddress;
+      sendPickupAlert();
+    };
+  }
+
+  async function sendPickupAlert() {
+    if (!pickupTargetChildId) return;
+    const finalAddress = document.getElementById('pickupAddressEdit').style.display === 'block'
+      ? (document.getElementById('pickupAddressEdit').value.trim() || pickupAddress)
+      : pickupAddress;
+    await _supabase.from('shomrim_sos_events').insert([{
+      child_id: pickupTargetChildId,
+      lat: null,
+      lng: null,
+      urgency: 'pickup',
+      photo_url: null,
+      status: 'open',
+      resolution_note: finalAddress || 'כתובת לא צוינה'
+    }]);
+    document.getElementById('pickupPanel').classList.remove('active');
+    document.getElementById('pickupBtn').style.display = 'flex';
+    const msg = CHILD_THANKS[Math.floor(Math.random() * CHILD_THANKS.length)];
+    const toast = document.getElementById('childToast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+  // ---- סוף פיצ'ר pickup ----
 
   async function cancelSOS() {
     if (currentEventId) {
