@@ -4,7 +4,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const ROLES = { CHILD: 'child', PARENT: 'parent' };
+const ROLES = { CHILD: 'child', PARENT: 'parent', ADMIN: 'admin' };
 const URGENCY = { LOW: 'low', HIGH: 'high', CRITICAL: 'critical' };
 const STATUS = { OPEN: 'open', HANDLED: 'handled', ESCALATED: 'escalated' };
 const SESSION_KEY = 'shomrim_sess';
