@@ -230,15 +230,15 @@
     el.style.display = 'block';
   }
 
-  // בדיקת token מה-URL
+  // בדיקת טוקן מה-URL — רץ אחרי שהדף נטען לחלוטין
   window.registrationSchool = null;
   window.registrationSchoolData = null;
 
-  (async () => {
+  window.addEventListener('load', async () => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     if (!token) {
-      // אין token — כניסה בלבד, הסתרת הרשמה
+      // אין טוקן — כניסה בלבד, הסתרת הרשמה
       document.querySelectorAll('.tab')[1].style.display = 'none';
       return;
     }
@@ -270,9 +270,9 @@
       document.getElementById('schoolLogoDisplay').style.display = 'block';
       document.getElementById('schoolDivider').style.display = 'block';
     }
-    // פתיחת טאב הרשמה אוטומטית
+    // פתיחת טאב הרשמה אוטומטית כשיש טוקן תקין
     showTab('register');
-  })();
+  });
 </script>
 </body>
 </html>
