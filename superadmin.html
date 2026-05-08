@@ -230,6 +230,10 @@
               <button class="btn-primary" onclick="generateToken()" style="white-space:nowrap; padding:11px 14px;">🎲 צור</button>
             </div>
           </div>
+          <div class="form-field">
+            <label>🔐 קוד ועד (6 ספרות — להפצה להורים)</label>
+            <input class="form-input" type="text" id="newJoinCode" placeholder="לדוגמה: 112233" maxlength="10">
+          </div>
           <div class="form-field form-full">
             <label>🖼️ לוגו בית הספר</label>
             <div class="upload-area" onclick="document.getElementById('logoInput').click()">
@@ -364,6 +368,11 @@
           <span class="token-text">${s.token}</span>
           <button class="btn-copy" onclick="copyLink('${s.token}')">📋 העתק לינק</button>
         </div>
+        <div class="token-row" style="background:#f0fff4; border:1px solid #ccffdd;">
+          <span style="font-size:12px; color:#006622;">🔐 קוד ועד:</span>
+          <span class="token-text" style="color:#006622; font-size:18px; letter-spacing:4px;">${s.join_code || '—'}</span>
+          ${s.join_code ? `<button class="btn-copy" onclick="navigator.clipboard.writeText('${s.join_code}').then(()=>alert('✅ הקוד הועתק!'))">📋 העתק</button>` : ''}
+        </div>
         ${!mini ? `<div class="school-actions">
           ${s.active
             ? `<button class="btn-warn" onclick="toggleSchool('${s.id}', false)">⏸ כבה</button>`
@@ -435,9 +444,10 @@
         logo_url = urlData.publicUrl;
       }
     }
+    const joinCode = document.getElementById('newJoinCode').value.trim() || null;
     const { error } = await _supabase.from('shomrim_schools').insert([{
       school_name: name, city, token, contact_name: contact, contact_phone: phone,
-      expires_at: expiry || null, active: true, logo_url
+      expires_at: expiry || null, active: true, logo_url, join_code: joinCode
     }]);
     if (error) {
       msg.textContent = error.code === '23505' ? '❌ Token כבר קיים — צור token חדש' : '❌ שגיאה: ' + error.message;
@@ -454,6 +464,7 @@
     document.getElementById('newContact').value = '';
     document.getElementById('newPhone').value = '';
     document.getElementById('newExpiry').value = '';
+    document.getElementById('newJoinCode').value = '';
     newLogoFile = null;
     document.getElementById('logoPreview').style.display = 'none';
     document.getElementById('uploadIcon').textContent = '📷 לחץ להעלאת לוגו';
