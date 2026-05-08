@@ -136,6 +136,27 @@
   if (!session || session.role !== 'parent') window.location.href = 'index.html';
   document.getElementById('userName').textContent = session.name.split(' ')[0];
 
+  // רישום service-worker ובקשת הרשאת התראות
+  async function registerPush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    try {
+      const reg = await navigator.serviceWorker.register('/shomrim/service-worker.js');
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: null
+      });
+      const subStr = JSON.stringify(sub);
+      await _supabase.from('shomrim_users')
+        .update({ push_subscription: subStr })
+        .eq('id', session.id);
+    } catch (e) {
+      console.warn('Push registration failed:', e);
+    }
+  }
+  registerPush();
+
   const respondedEvents = new Set();
 
   async function getAddress(lat, lng) {
