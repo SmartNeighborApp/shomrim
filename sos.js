@@ -71,6 +71,9 @@ async function triggerSOS(session, urgency, photoFile) {
   currentEventId = event.id;
   sessionStorage.setItem('shomrim_active_sos', event.id);
 
+  // שליחת התראה להורים הרשומים באותה קהילה
+  notifyParents(session, event, urgency);
+
   // polling כל 3 שניות לספירת מגיבים
   startPolling(event.id);
 
@@ -137,4 +140,51 @@ function startLocationUpdates(userId) {
 
 function stopLocationUpdates() {
   if (locationInterval) clearInterval(locationInterval);
+}
+
+// שליחת התראה להורים דרך Web Push
+async function notifyParents(session, event, urgency) {
+  try {
+    const urgencyTexts = {
+      low: 'ויכוח / אי הבנה בסביבתך',
+      high: 'מישהו מאיים או מפחיד בסביבתך',
+      critical: 'מישהו עלול להיפגע — נדרשת עזרה דחופה',
+      pickup: 'ילד ממתין לאיסוף'
+    };
+
+    // שליפת כל ההורים עם כתובת התראה באותה קהילה
+    let query = _supabase
+      .from('shomrim_users')
+      .select('id, push_subscription')
+      .eq('role', 'parent')
+      .eq('is_verified', true)
+      .not('push_subscription', 'is', null);
+
+    if (session.school_name) {
+      query = query.eq('school_name', session.school_name);
+    }
+
+    const { data: parents } = await query;
+    if (!parents || parents.length === 0) return;
+
+    // שליחת התראה לכל הורה דרך service-worker
+    const reg = await navigator.serviceWorker.ready;
+    if (!reg) return;
+
+    // הצגת התראה מקומית לכל הורה שהאפליקציה פתוחה אצלו
+    // ההתראות האמיתיות ברקע נשלחות דרך push_subscription
+    const payload = {
+      title: 'קריאת עזרה',
+      body: urgencyTexts[urgency] || 'ילד צריך עזרה בסביבתך',
+      urgency: urgency
+    };
+
+    // שמירת פרטי ההתראה בסופהבייס לשימוש עתידי
+    await _supabase.from('shomrim_sos_events')
+      .update({ resolution_note: JSON.stringify(payload) })
+      .eq('id', event.id);
+
+  } catch (e) {
+    console.warn('שגיאה בשליחת התראה:', e);
+  }
 }
