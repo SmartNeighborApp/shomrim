@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>שומרים — הגנת ילדים</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.ico">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
   .logo { font-size: 64px; margin-bottom: 10px; }
   h1 { font-size: 32px; color: #1a3c6e; margin-bottom: 6px; }
-  .tagline { font-size: 16px; color: #666; margin-bottom: 40px; text-align: center; }
+  .tagline { font-size: 16px; color: #666; margin-bottom: 24px; text-align: center; }
   .card { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .tabs { display: flex; margin-bottom: 24px; border-radius: 12px; overflow: hidden; border: 2px solid #1a3c6e; }
   .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-size: 16px; font-weight: bold; background: white; color: #1a3c6e; border: none; transition: all 0.2s; }
@@ -41,29 +43,38 @@
   .agreement-clause span { font-size: 13px; color: #333; line-height: 1.5; cursor: pointer; }
   .agreement-sign { width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 15px; font-family: inherit; outline: none; margin-top: 8px; }
   .agreement-sign:focus { border-color: #1a3c6e; }
-  .school-header { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; }
-  .school-logo-display { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 2px solid #e0e0e0; display: none; }
-  .school-divider { width: 2px; height: 40px; background: #ddd; display: none; }
-  .school-name-display { font-size: 14px; font-weight: bold; color: #1a3c6e; display: none; text-align: center; }
-  .token-error { background: #fff0f0; border: 2px solid #cc0000; border-radius: 16px; padding: 20px; text-align: center; color: #cc0000; font-weight: bold; display: none; }
+  /* פאנל קוד ועד */
+  .join-panel { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  .join-title { font-size: 16px; font-weight: bold; color: #1a3c6e; margin-bottom: 12px; text-align: center; }
+  .join-subtitle { font-size: 13px; color: #888; text-align: center; margin-bottom: 16px; }
+  .join-input { width: 100%; padding: 14px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 22px; font-family: inherit; outline: none; text-align: center; letter-spacing: 6px; font-weight: bold; color: #1a3c6e; }
+  .join-input:focus { border-color: #1a3c6e; }
+  .join-btn { width: 100%; padding: 14px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; margin-top: 10px; }
+  .join-btn:active { transform: scale(0.98); }
+  .join-error { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; padding: 10px 14px; border-radius: 10px; font-size: 14px; margin-top: 10px; display: none; text-align: center; }
+  .join-success { background: #f0fff4; border: 1px solid #ccffdd; color: #006622; padding: 8px 14px; border-radius: 10px; font-size: 14px; margin-top: 8px; display: none; text-align: center; }
 </style>
 </head>
 <body>
 
-<div class="school-header">
-  <div class="logo" style="font-size:52px; margin:0;">🛡️</div>
-  <div class="school-divider" id="schoolDivider"></div>
-  <img class="school-logo-display" id="schoolLogoDisplay">
-</div>
+<div class="logo">🛡️</div>
 <h1>שומרים</h1>
-<div class="school-name-display" id="schoolNameDisplay"></div>
-<p class="tagline" id="mainTagline">רשת הורים מגינה על ילדים</p>
-<div class="token-error" id="tokenError">⛔ לינק הרשמה לא תקין או פג תוקף.<br>פנה למנהל בית הספר לקבלת לינק חדש.</div>
+<p class="tagline">רשת הורים מגינה על ילדים</p>
 
-<div class="card">
+<!-- פאנל קוד ועד — מוצג בלחיצה על טאב הרשמה -->
+<div class="join-panel" id="joinPanel" style="display:none">
+  <div class="join-title">🔐 קוד ועד</div>
+  <div class="join-subtitle">הכנס את הקוד שקיבלת מיו"ר הועד שלך</div>
+  <input class="join-input" type="text" id="joinCode" placeholder="● ● ● ● ● ●" maxlength="10" inputmode="text" oninput="this.value = this.value.toUpperCase()">
+  <button class="join-btn" onclick="checkJoinCode()">אישור</button>
+  <div class="join-error" id="joinError">❌ קוד שגוי — פנה ליו"ר הועד לקבלת הקוד הנכון</div>
+  <div class="join-success" id="joinSuccess">✅ קוד תקין! ממשיך לטופס הרשמה...</div>
+</div>
+
+<div class="card" id="mainCard">
   <div class="tabs">
-    <button class="tab active" onclick="showTab('login')">כניסה</button>
-    <button class="tab" onclick="showTab('register')">הרשמה</button>
+    <button class="tab active" id="tabLogin" onclick="showTab('login')">כניסה</button>
+    <button class="tab" id="tabRegister" onclick="showTab('register')">הרשמה</button>
   </div>
 
   <!-- טופס כניסה -->
@@ -177,17 +188,62 @@
 <script src="auth.js"></script>
 <script>
   let selectedRole = 'child';
+  window.registrationSchool = null;
+  window.registrationSchoolData = null;
 
   function showTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('#loginForm, #registerForm').forEach(f => f.classList.remove('active'));
     if (tab === 'login') {
-      document.querySelectorAll('.tab')[0].classList.add('active');
+      document.getElementById('tabLogin').classList.add('active');
       document.getElementById('loginForm').classList.add('active');
+      document.getElementById('joinPanel').style.display = 'none';
+      document.getElementById('mainCard').style.display = 'block';
     } else {
-      document.querySelectorAll('.tab')[1].classList.add('active');
-      document.getElementById('registerForm').classList.add('active');
+      document.getElementById('tabRegister').classList.add('active');
+      if (window.registrationSchool) {
+        // קוד ועד כבר אושר — פותח הרשמה ישירות
+        document.getElementById('registerForm').classList.add('active');
+        document.getElementById('joinPanel').style.display = 'none';
+        document.getElementById('mainCard').style.display = 'block';
+      } else {
+        // מציג פאנל קוד ועד ומסתיר את הכרטיס
+        document.getElementById('joinPanel').style.display = 'block';
+        document.getElementById('mainCard').style.display = 'none';
+      }
     }
+  }
+
+  async function checkJoinCode() {
+    const code = document.getElementById('joinCode').value.trim();
+    if (!code) return;
+    document.getElementById('joinError').style.display = 'none';
+    document.getElementById('joinSuccess').style.display = 'none';
+    const { data: school } = await _supabase
+      .from('shomrim_schools')
+      .select('*')
+      .eq('join_code', code)
+      .eq('active', true)
+      .maybeSingle();
+    if (!school) {
+      document.getElementById('joinError').style.display = 'block';
+      return;
+    }
+    if (school.expires_at && new Date(school.expires_at) < new Date()) {
+      document.getElementById('joinError').style.display = 'block';
+      return;
+    }
+    window.registrationSchool = school.school_name;
+    window.registrationSchoolData = school;
+    document.getElementById('joinSuccess').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('joinPanel').style.display = 'none';
+      document.getElementById('mainCard').style.display = 'block';
+      document.getElementById('tabRegister').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+      document.getElementById('registerForm').classList.add('active');
+      document.getElementById('loginForm').classList.remove('active');
+    }, 800);
   }
 
   function selectRole(role) {
@@ -229,50 +285,6 @@
     el.textContent = msg;
     el.style.display = 'block';
   }
-
-  // בדיקת טוקן מה-URL — רץ אחרי שהדף נטען לחלוטין
-  window.registrationSchool = null;
-  window.registrationSchoolData = null;
-
-  window.addEventListener('load', async () => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (!token) {
-      // אין טוקן — כניסה בלבד, הסתרת הרשמה
-      document.querySelectorAll('.tab')[1].style.display = 'none';
-      return;
-    }
-    const { data: school } = await _supabase
-      .from('shomrim_schools')
-      .select('*')
-      .eq('token', token)
-      .eq('active', true)
-      .maybeSingle();
-    if (!school) {
-      document.getElementById('tokenError').style.display = 'block';
-      document.querySelector('.card').style.display = 'none';
-      document.getElementById('mainTagline').style.display = 'none';
-      return;
-    }
-    if (school.expires_at && new Date(school.expires_at) < new Date()) {
-      document.getElementById('tokenError').style.display = 'block';
-      document.querySelector('.card').style.display = 'none';
-      document.getElementById('mainTagline').style.display = 'none';
-      return;
-    }
-    window.registrationSchool = school.school_name;
-    window.registrationSchoolData = school;
-    document.getElementById('schoolNameDisplay').textContent = '🏫 ' + school.school_name + ' — ' + school.city;
-    document.getElementById('schoolNameDisplay').style.display = 'block';
-    document.getElementById('mainTagline').style.display = 'none';
-    if (school.logo_url) {
-      document.getElementById('schoolLogoDisplay').src = school.logo_url;
-      document.getElementById('schoolLogoDisplay').style.display = 'block';
-      document.getElementById('schoolDivider').style.display = 'block';
-    }
-    // פתיחת טאב הרשמה אוטומטית כשיש טוקן תקין
-    showTab('register');
-  });
 </script>
 </body>
 </html>
