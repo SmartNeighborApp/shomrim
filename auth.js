@@ -72,6 +72,13 @@ async function doRegister() {
     ? (document.getElementById('regClass').value.trim() || null)
     : null;
 
+  // קישור משפחה — הורה ראשי מקבל את הטלפון שלו, הורה שני מכניס טלפון בן/בת הזוג
+  let family_phone = null;
+  if (role === ROLES.PARENT) {
+    const partnerPhone = document.getElementById('regPartnerPhone')?.value.trim();
+    family_phone = partnerPhone && partnerPhone.length >= 9 ? partnerPhone : phone;
+  }
+
   const userData = {
     name,
     phone,
@@ -83,6 +90,7 @@ async function doRegister() {
     photo_url,
     school_name,
     class_name,
+    family_phone,
     agreement_signed: role === ROLES.PARENT ? true : false,
     agreement_name: role === ROLES.PARENT ? document.getElementById('agreementName').value.trim() : null,
     is_verified: false
