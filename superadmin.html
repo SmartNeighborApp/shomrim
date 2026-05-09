@@ -164,6 +164,7 @@
     <div class="nav-item" onclick="showSec('schools', this)"><span class="nav-icon">🏫</span> בתי ספר</div>
     <div class="nav-item" onclick="showSec('add', this)"><span class="nav-icon">➕</span> הוספת בית ספר</div>
     <div class="nav-item" onclick="showSec('billing', this)"><span class="nav-icon">💰</span> חיוב ותשלומים</div>
+    <div class="nav-item" onclick="showSec('survey', this)"><span class="nav-icon">📊</span> סקר</div>
     <div class="nav-item" onclick="showSec('settings', this)"><span class="nav-icon">⚙️</span> הגדרות</div>
     <div class="nav-item" onclick="saLogout()" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1);"><span class="nav-icon">🚪</span> יציאה</div>
   </div>
@@ -272,6 +273,28 @@
       </div>
     </div>
 
+    <!-- סקר -->
+    <div class="section" id="sec-survey">
+      <div class="page-header">
+        <div class="page-title">📊 תוצאות סקר</div>
+        <button class="btn-primary" onclick="loadSurvey()">🔄 עדכן</button>
+      </div>
+      <div class="stats-grid" id="surveyStats" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card blue"><div class="stat-num" id="surveyTotal">—</div><div class="stat-label">סה"כ משיבים</div></div>
+        <div class="stat-card green"><div class="stat-num" id="surveyPositive">—</div><div class="stat-label">חיוני / חשוב מאוד</div></div>
+        <div class="stat-card orange"><div class="stat-num" id="surveyWouldJoin">—</div><div class="stat-label">היו מצטרפים</div></div>
+        <div class="stat-card blue"><div class="stat-num" id="surveyPmf">—%</div><div class="stat-label">ציון PMF</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 פירוט תשובות לפי שאלה</div>
+        <div id="surveyDetails"><div class="empty-state">לחץ עדכן לטעינת הנתונים</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💬 תשובות חופשיות</div>
+        <div id="surveyFreeText"><div class="empty-state">אין תשובות עדיין</div></div>
+      </div>
+    </div>
+
     <!-- הגדרות -->
     <div class="section" id="sec-settings">
       <div class="page-header"><div class="page-title">⚙️ הגדרות Super Admin</div></div>
@@ -344,6 +367,7 @@
   async function loadAll() {
     await loadSchools();
     await loadBilling();
+    await loadSurvey();
   }
 
   async function loadSchools() {
@@ -581,6 +605,76 @@
   async function refreshBilling() {
     document.getElementById('billingTable').innerHTML = '<div class="empty-state">מעדכן...</div>';
     await loadBilling();
+  }
+
+  // ===== סקר =====
+  async function loadSurvey() {
+    const { data: rows } = await _supabase.from('shomrim_survey').select('*').order('created_at', { ascending: false });
+    if (!rows || !rows.length) {
+      document.getElementById('surveyDetails').innerHTML = '<div class="empty-state">אין תשובות עדיין</div>';
+      document.getElementById('surveyFreeText').innerHTML = '<div class="empty-state">אין תשובות עדיין</div>';
+      document.getElementById('surveyTotal').textContent = '0';
+      document.getElementById('surveyPositive').textContent = '0';
+      document.getElementById('surveyWouldJoin').textContent = '0';
+      document.getElementById('surveyPmf').textContent = '0%';
+      return;
+    }
+    const total = rows.length;
+    const positive = rows.filter(r => r.q1 && (r.q1.includes('חיוני') || r.q1.includes('חשוב מאוד'))).length;
+    const wouldJoin = rows.filter(r => r.q4 && (r.q4.includes('מיד') || r.q4.includes('כנראה שכן'))).length;
+    const pmf = Math.round((positive / total) * 100);
+    document.getElementById('surveyTotal').textContent = total;
+    document.getElementById('surveyPositive').textContent = positive;
+    document.getElementById('surveyWouldJoin').textContent = wouldJoin;
+    document.getElementById('surveyPmf').textContent = pmf + '%';
+
+    const questions = [
+      { key: 'q1', label: 'שאלה 1 — חשיבות הכלי' },
+      { key: 'q2', label: 'שאלה 2 — תדירות ילדים בחוץ' },
+      { key: 'q3', label: 'שאלה 3 — חשש לביטחון' },
+      { key: 'q4', label: 'שאלה 4 — נכונות להצטרף' },
+      { key: 'q5', label: 'שאלה 5 — מה מדאיג' },
+      { key: 'q6', label: 'שאלה 6 — רישום ילד' },
+      { key: 'q7', label: 'שאלה 7 — מחיר 3.5 ₪ לחודש' },
+      { key: 'q8', label: 'שאלה 8 — המלצה לחברים' }
+    ];
+
+    let detailsHtml = '';
+    questions.forEach(q => {
+      const counts = {};
+      rows.forEach(r => { if (r[q.key]) counts[r[q.key]] = (counts[r[q.key]] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      detailsHtml += `<div style="margin-bottom:20px; border-bottom:1px solid var(--gray-mid); padding-bottom:16px;">
+        <div style="font-size:14px; font-weight:700; color:var(--blue); margin-bottom:10px;">${q.label}</div>`;
+      sorted.forEach(([ans, cnt]) => {
+        const pct = Math.round((cnt / total) * 100);
+        detailsHtml += `<div style="margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span>${ans}</span><span style="font-weight:700; color:var(--blue);">${cnt} (${pct}%)</span>
+          </div>
+          <div style="height:8px; background:var(--gray-mid); border-radius:99px; overflow:hidden;">
+            <div style="height:100%; width:${pct}%; background:var(--blue); border-radius:99px; transition:width 0.4s;"></div>
+          </div>
+        </div>`;
+      });
+      detailsHtml += '</div>';
+    });
+    document.getElementById('surveyDetails').innerHTML = detailsHtml;
+
+    const freeTexts = rows.filter(r => r.q9_free && r.q9_free.trim());
+    if (freeTexts.length) {
+      let ftHtml = '';
+      freeTexts.forEach(r => {
+        const d = new Date(r.created_at).toLocaleDateString('he-IL');
+        ftHtml += `<div style="padding:12px 16px; background:var(--gray); border-radius:10px; margin-bottom:8px; font-size:13px; line-height:1.6;">
+          <div style="color:var(--text-soft); font-size:11px; margin-bottom:4px;">${d}</div>
+          ${r.q9_free}
+        </div>`;
+      });
+      document.getElementById('surveyFreeText').innerHTML = ftHtml;
+    } else {
+      document.getElementById('surveyFreeText').innerHTML = '<div class="empty-state">אין תשובות חופשיות עדיין</div>';
+    }
   }
 
   // ===== שינוי סיסמה =====
