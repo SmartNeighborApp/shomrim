@@ -118,6 +118,16 @@
   .upload-preview { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; display: none; margin: 0 auto 6px; }
 
   .empty-state { text-align: center; padding: 40px; color: var(--text-soft); font-size: 14px; }
+  .billing-table { width: 100%; border-collapse: collapse; }
+  .billing-table th { background: var(--blue); color: white; padding: 12px 14px; text-align: right; font-size: 13px; font-weight: 700; }
+  .billing-table td { padding: 12px 14px; border-bottom: 1px solid var(--gray-mid); font-size: 13px; vertical-align: middle; }
+  .billing-table tr:hover td { background: var(--gray); }
+  .billing-table tr.unpaid td { background: #fff9e6; }
+  .billing-table tr.frozen td { background: var(--red-light); opacity: 0.8; }
+  .status-paid { background: var(--green-light); color: var(--green); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .status-trial { background: var(--blue-pale); color: var(--blue); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .status-unpaid { background: var(--yellow-light); color: #856404; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .status-frozen { background: var(--red-light); color: var(--red); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 
   @media (max-width: 768px) {
     .sidebar { width: 200px; }
@@ -153,6 +163,7 @@
     <div class="nav-item active" onclick="showSec('dashboard', this)"><span class="nav-icon">📊</span> דשבורד</div>
     <div class="nav-item" onclick="showSec('schools', this)"><span class="nav-icon">🏫</span> בתי ספר</div>
     <div class="nav-item" onclick="showSec('add', this)"><span class="nav-icon">➕</span> הוספת בית ספר</div>
+    <div class="nav-item" onclick="showSec('billing', this)"><span class="nav-icon">💰</span> חיוב ותשלומים</div>
     <div class="nav-item" onclick="showSec('settings', this)"><span class="nav-icon">⚙️</span> הגדרות</div>
     <div class="nav-item" onclick="saLogout()" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1);"><span class="nav-icon">🚪</span> יציאה</div>
   </div>
@@ -249,6 +260,18 @@
       </div>
     </div>
 
+    <!-- חיוב ותשלומים -->
+    <div class="section" id="sec-billing">
+      <div class="page-header">
+        <div class="page-title">💰 חיוב ותשלומים</div>
+        <button class="btn-primary" onclick="refreshBilling()">🔄 עדכן נתונים</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 סיכום חיוב רבעוני</div>
+        <div id="billingTable"><div class="empty-state">טוען...</div></div>
+      </div>
+    </div>
+
     <!-- הגדרות -->
     <div class="section" id="sec-settings">
       <div class="page-header"><div class="page-title">⚙️ הגדרות Super Admin</div></div>
@@ -320,6 +343,7 @@
   // ===== טעינה =====
   async function loadAll() {
     await loadSchools();
+    await loadBilling();
   }
 
   async function loadSchools() {
@@ -481,6 +505,82 @@
     if (newContact === null) return;
     await _supabase.from('shomrim_schools').update({ expires_at: newExpiry || null, contact_name: newContact }).eq('id', id);
     await loadSchools();
+  }
+
+  // ===== חיוב ותשלומים =====
+  async function loadBilling() {
+    const { data: schools } = await _supabase.from('shomrim_schools').select('*').order('created_at', { ascending: false });
+    if (!schools || !schools.length) {
+      document.getElementById('billingTable').innerHTML = '<div class="empty-state">אין קהילות רשומות</div>';
+      return;
+    }
+    // ספירת משפחות לכל קהילה
+    const rows = await Promise.all(schools.map(async s => {
+      const { count: parents } = await _supabase.from('shomrim_users').select('*', { count: 'exact', head: true }).eq('school_name', s.school_name).eq('role', 'parent').eq('is_verified', true);
+      const { count: children } = await _supabase.from('shomrim_users').select('*', { count: 'exact', head: true }).eq('school_name', s.school_name).eq('role', 'child');
+      const families = Math.max(parents || 0, Math.ceil((children || 0) / 1.5));
+      const amount = families * 42;
+      const trialEnd = s.trial_start ? new Date(new Date(s.trial_start).getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+      const inTrial = trialEnd && trialEnd > new Date();
+      const status = s.payment_status || 'trial';
+      return { s, families, amount, inTrial, trialEnd, status };
+    }));
+    // עדכון ספירת משפחות בסופהבייס
+    for (const r of rows) {
+      await _supabase.from('shomrim_schools').update({ families_count: r.families }).eq('id', r.s.id);
+    }
+    const totalAmount = rows.reduce((sum, r) => sum + r.amount, 0);
+    let html = `<div style="margin-bottom:16px; font-size:14px; font-weight:700; color:var(--blue);">סה"כ לגבייה: <span style="font-size:20px;">₪${totalAmount.toLocaleString()}</span></div>`;
+    html += `<table class="billing-table"><thead><tr>
+      <th>קהילה</th><th>עיר</th><th>משפחות</th><th>סכום (₪42 למשפחה — 3.5 ₪ לחודש)</th><th>סטטוס</th><th>תשלום אחרון</th><th>פעולות</th>
+    </tr></thead><tbody>`;
+    for (const r of rows) {
+      const statusLabel = r.inTrial
+        ? `<span class="status-trial">🆓 חודש חינם עד ${r.trialEnd.toLocaleDateString('he-IL')}</span>`
+        : r.status === 'paid' ? `<span class="status-paid">✅ שולם</span>`
+        : r.status === 'frozen' ? `<span class="status-frozen">🔒 מוקפא</span>`
+        : `<span class="status-unpaid">⚠️ ממתין לתשלום</span>`;
+      const paidDate = r.s.payment_date ? new Date(r.s.payment_date).toLocaleDateString('he-IL') : '—';
+      const rowClass = r.status === 'frozen' ? 'frozen' : r.status === 'unpaid' ? 'unpaid' : '';
+      html += `<tr class="${rowClass}">
+        <td><strong>${r.s.school_name}</strong></td>
+        <td>${r.s.city}</td>
+        <td style="text-align:center; font-weight:700; font-size:16px;">${r.families}</td>
+        <td style="text-align:center; font-weight:700;">₪${r.amount.toLocaleString()}</td>
+        <td>${statusLabel}</td>
+        <td>${paidDate}</td>
+        <td style="display:flex; gap:6px; flex-wrap:wrap;">
+          ${r.status !== 'paid' ? `<button class="btn-success" onclick="markPaid('${r.s.id}')">✅ סמן שולם</button>` : ''}
+          ${r.status !== 'frozen' && !r.inTrial ? `<button class="btn-danger" onclick="freezeSchool('${r.s.id}')">🔒 הקפא</button>` : ''}
+          ${r.status === 'frozen' ? `<button class="btn-success" onclick="unfreezeSchool('${r.s.id}')">🔓 שחרר</button>` : ''}
+        </td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    document.getElementById('billingTable').innerHTML = html;
+  }
+
+  async function markPaid(id) {
+    await _supabase.from('shomrim_schools').update({ payment_status: 'paid', payment_date: new Date().toISOString() }).eq('id', id);
+    await loadBilling();
+  }
+
+  async function freezeSchool(id) {
+    if (!confirm('להקפיא קהילה זו? ההורים לא יוכלו לקבל קריאות.')) return;
+    await _supabase.from('shomrim_schools').update({ payment_status: 'frozen', active: false }).eq('id', id);
+    await loadBilling();
+    await loadSchools();
+  }
+
+  async function unfreezeSchool(id) {
+    await _supabase.from('shomrim_schools').update({ payment_status: 'paid', active: true, payment_date: new Date().toISOString() }).eq('id', id);
+    await loadBilling();
+    await loadSchools();
+  }
+
+  async function refreshBilling() {
+    document.getElementById('billingTable').innerHTML = '<div class="empty-state">מעדכן...</div>';
+    await loadBilling();
   }
 
   // ===== שינוי סיסמה =====
