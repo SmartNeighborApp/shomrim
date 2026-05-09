@@ -293,6 +293,16 @@
         <div class="card-title">💬 תשובות חופשיות</div>
         <div id="surveyFreeText"><div class="empty-state">אין תשובות עדיין</div></div>
       </div>
+      <div class="card" id="aiAnalysisCard">
+        <div class="card-title">🤖 ניתוח AI — מסקנות והמלצות לפעולה</div>
+        <button class="btn-primary" onclick="analyzeSurvey()" id="analyzeBtn" style="margin-bottom:16px; width:100%; font-size:15px; padding:16px;">🤖 נתח תוצאות והפק המלצות</button>
+        <div id="aiAnalysisResult" style="display:none;">
+          <div id="aiAnalysisText" style="font-size:14px; line-height:1.9; color:var(--text); white-space:pre-wrap;"></div>
+        </div>
+        <div id="aiAnalysisLoading" style="display:none; text-align:center; padding:24px; color:var(--text-soft); font-size:14px;">
+          ⏳ מנתח את התוצאות... זה לוקח כמה שניות
+        </div>
+      </div>
     </div>
 
     <!-- הגדרות -->
@@ -675,6 +685,71 @@
     } else {
       document.getElementById('surveyFreeText').innerHTML = '<div class="empty-state">אין תשובות חופשיות עדיין</div>';
     }
+  }
+
+  // ===== ניתוח AI =====
+  async function analyzeSurvey() {
+    const { data: rows } = await _supabase.from('shomrim_survey').select('*').order('created_at', { ascending: false });
+    if (!rows || !rows.length) {
+      alert('אין תשובות לניתוח עדיין');
+      return;
+    }
+    document.getElementById('analyzeBtn').style.display = 'none';
+    document.getElementById('aiAnalysisLoading').style.display = 'block';
+    document.getElementById('aiAnalysisResult').style.display = 'none';
+
+    const total = rows.length;
+    const positive = rows.filter(r => r.q1 && (r.q1.includes('חיוני') || r.q1.includes('חשוב מאוד'))).length;
+    const wouldJoin = rows.filter(r => r.q4 && (r.q4.includes('מיד') || r.q4.includes('כנראה שכן'))).length;
+    const pmf = Math.round((positive / total) * 100);
+    const wouldRecommend = rows.filter(r => r.q8 && (r.q8.includes('בהחלט') || r.q8.includes('כנראה שכן'))).length;
+    const priceOk = rows.filter(r => r.q7 && (r.q7.includes('ברור') || r.q7.includes('סביר'))).length;
+    const concerns = {};
+    rows.forEach(r => { if (r.q5) concerns[r.q5] = (concerns[r.q5] || 0) + 1; });
+    const topConcern = Object.entries(concerns).sort((a,b) => b[1]-a[1])[0];
+    const freeTexts = rows.filter(r => r.q9_free && r.q9_free.trim()).map(r => r.q9_free).join('
+---
+');
+
+    const prompt = `אתה יועץ עסקי ישראלי המנתח תוצאות סקר שוק לאפליקציה חדשה בשם "שומרים" — רשת הורים מתנדבים שמגיבים בזמן אמת לקריאת ילדים במצוקה ברחוב.
+
+נתוני הסקר (${total} משיבים):
+- ציון PMF (כמה אנשים יהיו מאוד מאוכזבים אם האפליקציה לא תהיה): ${pmf}% (${positive} מתוך ${total})
+- נכונות להצטרף לרשת: ${Math.round((wouldJoin/total)*100)}% (${wouldJoin} מתוך ${total})
+- ימליצו לחברים: ${Math.round((wouldRecommend/total)*100)}% (${wouldRecommend} מתוך ${total})
+- מחיר 3.5 שקל לחודש נראה סביר: ${Math.round((priceOk/total)*100)}% (${priceOk} מתוך ${total})
+- הדאגה הכי גדולה של המשיבים: ${topConcern ? topConcern[0] + ' (' + topConcern[1] + ' אנשים)' : 'לא צוין'}
+- תשובות חופשיות מהמשיבים: ${freeTexts || 'אין'}
+
+כתוב ניתוח מפורט בעברית שכולל:
+1. האם יש כאן ביקוש אמיתי — הסבר את המספרים בפשטות
+2. מה עובד טוב — מה המספרים מראים שהולך בכיוון הנכון
+3. מה מדאיג — איפה יש חששות שצריך לטפל בהם
+4. צעדים ספציפיים לפעולה — מה לעשות עכשיו, מה לטפל בו, ואיך להמשיך
+
+כתוב בצורה ברורה, מעשית ומניעה לפעולה. אל תהיה ג'נרי — התייחס לנתונים הספציפיים.`;
+
+    try {
+      const res = await fetch('https://sn-ai-proxy.shirit-coach.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text || 'לא הצלחתי לנתח את הנתונים.';
+      document.getElementById('aiAnalysisText').textContent = text;
+      document.getElementById('aiAnalysisResult').style.display = 'block';
+    } catch (e) {
+      document.getElementById('aiAnalysisText').textContent = 'שגיאה בחיבור לשירות הניתוח. נסה שוב.';
+      document.getElementById('aiAnalysisResult').style.display = 'block';
+    }
+    document.getElementById('aiAnalysisLoading').style.display = 'none';
+    document.getElementById('analyzeBtn').style.display = 'block';
+    document.getElementById('analyzeBtn').textContent = '🔄 נתח מחדש';
   }
 
   // ===== שינוי סיסמה =====
