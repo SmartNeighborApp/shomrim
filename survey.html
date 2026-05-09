@@ -35,21 +35,40 @@
     color: var(--text);
   }
 
+  /* מסך מבוא */
+  .intro-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 36px 28px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    animation: slideIn 0.4s ease both;
+  }
+  .intro-badge { display: inline-block; background: #e8f0ff; color: var(--blue); border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+  .intro-title { font-size: 24px; font-weight: 800; color: var(--blue); line-height: 1.4; margin-bottom: 16px; }
+  .intro-desc { font-size: 16px; color: var(--text-soft); line-height: 1.7; margin-bottom: 28px; }
+  .intro-time { font-size: 13px; color: var(--text-soft); margin-bottom: 20px; }
+  .btn-start { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: white; border: none; border-radius: 14px; font-size: 20px; font-weight: 800; cursor: pointer; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 16px rgba(26,60,110,0.3); }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,60,110,0.4); }
+  .btn-start:active { transform: scale(0.98); }
+
   /* כותרת */
   .header {
     text-align: center;
     margin-bottom: 32px;
     animation: fadeDown 0.6s ease both;
   }
-  .header-icon { font-size: 52px; margin-bottom: 8px; }
-  .header h1 { font-size: 26px; font-weight: 800; color: var(--blue); margin-bottom: 6px; }
-  .header p { font-size: 14px; color: var(--text-soft); max-width: 320px; margin: 0 auto; line-height: 1.6; }
+  .header-icon { font-size: 58px; margin-bottom: 8px; }
+  .header h1 { font-size: 32px; font-weight: 800; color: var(--blue); margin-bottom: 6px; }
+  .header p { font-size: 18px; color: var(--text-soft); max-width: 320px; margin: 0 auto; line-height: 1.6; }
 
   /* פרוגרס */
   .progress-wrap { width: 100%; max-width: 480px; margin-bottom: 24px; animation: fadeDown 0.6s 0.1s ease both; }
   .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
   .progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--gold)); border-radius: 99px; transition: width 0.4s ease; }
-  .progress-text { font-size: 12px; color: var(--text-soft); text-align: left; margin-top: 6px; }
+  .progress-text { font-size: 15px; color: var(--text-soft); text-align: left; margin-top: 6px; }
 
   /* כרטיס שאלה */
   .question-card {
@@ -64,9 +83,9 @@
   }
   .question-card.active { display: block; }
 
-  .q-number { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-  .q-text { font-size: 17px; font-weight: 700; color: var(--blue); line-height: 1.5; margin-bottom: 20px; }
-  .q-sub { font-size: 13px; color: var(--text-soft); margin-top: -14px; margin-bottom: 18px; line-height: 1.5; }
+  .q-number { font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .q-text { font-size: 22px; font-weight: 700; color: var(--blue); line-height: 1.5; margin-bottom: 20px; }
+  .q-sub { font-size: 16px; color: var(--text-soft); margin-top: -14px; margin-bottom: 18px; line-height: 1.5; }
 
   /* אפשרויות בחירה */
   .options { display: flex; flex-direction: column; gap: 10px; }
@@ -79,7 +98,7 @@
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 500;
     color: var(--text);
     background: white;
@@ -126,7 +145,7 @@
     color: white;
     border: none;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
     cursor: pointer;
     font-family: 'Heebo', sans-serif;
@@ -142,7 +161,7 @@
     padding: 10px;
     background: none;
     border: none;
-    font-size: 13px;
+    font-size: 16px;
     color: var(--text-soft);
     cursor: pointer;
     font-family: 'Heebo', sans-serif;
@@ -163,8 +182,8 @@
   }
   .done-card.active { display: block; }
   .done-icon { font-size: 64px; margin-bottom: 16px; }
-  .done-title { font-size: 22px; font-weight: 800; color: var(--blue); margin-bottom: 10px; }
-  .done-text { font-size: 14px; color: var(--text-soft); line-height: 1.7; }
+  .done-title { font-size: 26px; font-weight: 800; color: var(--blue); margin-bottom: 10px; }
+  .done-text { font-size: 17px; color: var(--text-soft); line-height: 1.7; }
 
   /* אנימציות */
   @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
@@ -179,16 +198,26 @@
   <p>3 דקות מזמנך יעזרו לנו להבין אם זה מה שאתם צריכים</p>
 </div>
 
-<div class="progress-wrap">
+<!-- מסך מבוא -->
+<div class="intro-card" id="introCard">
+  <div style="font-size:56px; margin-bottom:12px;">🛡️</div>
+  <div class="intro-badge">סקר אנונימי — 3 דקות</div>
+  <div class="intro-title">"דמיין שקיימת אפליקציה קהילתית של רשת הורים מתנדבים המגינה על ילדינו ומגיבה בזמן אמת לקריאתו"</div>
+  <div class="intro-desc">9 שאלות קצרות. אנונימי לחלוטין. דעתך חשובה לנו.</div>
+  <div class="intro-time">⏱️ לוקח כ-3 דקות</div>
+  <button class="btn-start" onclick="startSurvey()">בואו נתחיל ←</button>
+</div>
+
+<div class="progress-wrap" id="progressWrap" style="display:none;">
   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   <div class="progress-text" id="progressText">שאלה 1 מתוך 9</div>
 </div>
 
 <!-- שאלה 1 -->
-<div class="question-card active" id="q1">
+<div class="question-card" id="q1">
   <div class="q-number">שאלה 1</div>
   <div class="q-text">כשהילד שלך יוצא לרחוב לבד — מי שומר עליו?</div>
-  <div class="q-sub">ואם הייתה קהילת הורים שמגיבה לקריאתו תוך דקות — כמה זה היה חשוב לך?</div>
+  <div class="q-sub">אנחנו בונים אפליקציה בשם שומרים — רשת הורים מתנדבים שמגיבים לקריאת ילדים ברחוב. כמה זה היה חשוב לך?</div>
   <div class="options">
     <div class="option" onclick="selectOption(this, 'q1')"><div class="option-dot"></div>חיוני — זה בדיוק מה שחסר לי</div>
     <div class="option" onclick="selectOption(this, 'q1')"><div class="option-dot"></div>חשוב מאוד</div>
@@ -227,7 +256,7 @@
 <!-- שאלה 4 -->
 <div class="question-card" id="q4">
   <div class="q-number">שאלה 4</div>
-  <div class="q-text">אם שכנים והורים מהקהילה שלך היו חלק מרשת כזו — האם היית מצטרף/ת?</div>
+  <div class="q-text">אם שכנים והורים מהקהילה שלך היו חלק מאפליקציית שומרים — האם היית מצטרף/ת?</div>
   <div class="options">
     <div class="option" onclick="selectOption(this, 'q4')"><div class="option-dot"></div>כן, מיד</div>
     <div class="option" onclick="selectOption(this, 'q4')"><div class="option-dot"></div>כנראה שכן</div>
@@ -254,7 +283,7 @@
 <!-- שאלה 6 -->
 <div class="question-card" id="q6">
   <div class="q-number">שאלה 6</div>
-  <div class="q-text">האם היית מרשים/ה לילד/ים שלך להשתמש באפליקציה כזו?</div>
+  <div class="q-text">האם היית מרשים/ה לילד/ים שלך להשתמש באפליקציית שומרים?</div>
   <div class="options">
     <div class="option" onclick="selectOption(this, 'q6')"><div class="option-dot"></div>בהחלט כן</div>
     <div class="option" onclick="selectOption(this, 'q6')"><div class="option-dot"></div>כנראה שכן</div>
@@ -267,7 +296,7 @@
 <!-- שאלה 7 -->
 <div class="question-card" id="q7">
   <div class="q-number">שאלה 7</div>
-  <div class="q-text">רשת הגנה לילדים — 3.5 ₪ לחודש למשפחה שלמה. מה דעתך?</div>
+  <div class="q-text">מנוי לאפליקציית שומרים — 3.5 ₪ לחודש למשפחה שלמה. מה דעתך?</div>
   <div class="options">
     <div class="option" onclick="selectOption(this, 'q7')"><div class="option-dot"></div>ברור שכן — זה כלום על בטיחות הילד</div>
     <div class="option" onclick="selectOption(this, 'q7')"><div class="option-dot"></div>סביר לגמרי</div>
@@ -309,6 +338,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
+  function startSurvey() {
+    document.getElementById('introCard').style.display = 'none';
+    document.getElementById('progressWrap').style.display = 'block';
+    document.getElementById('q1').classList.add('active');
+    updateProgress(1);
+  }
+
   const answers = {};
   const totalQ = 9;
 
@@ -363,7 +399,6 @@
     }
   }
 
-  updateProgress(1);
 </script>
 </body>
 </html>
