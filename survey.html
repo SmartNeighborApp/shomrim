@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומרים — סקר קצר</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&display=swap');
+
+  :root {
+    --blue: #1a3c6e;
+    --blue-light: #2e5ca8;
+    --gold: #c9a84c;
+    --bg: #f4f6fb;
+    --white: #ffffff;
+    --text: #1a1a2e;
+    --text-soft: #6b7280;
+    --border: #e5e7eb;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(26,60,110,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+    color: var(--text);
+  }
+
+  /* כותרת */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .header-icon { font-size: 52px; margin-bottom: 8px; }
+  .header h1 { font-size: 26px; font-weight: 800; color: var(--blue); margin-bottom: 6px; }
+  .header p { font-size: 14px; color: var(--text-soft); max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+  /* פרוגרס */
+  .progress-wrap { width: 100%; max-width: 480px; margin-bottom: 24px; animation: fadeDown 0.6s 0.1s ease both; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--gold)); border-radius: 99px; transition: width 0.4s ease; }
+  .progress-text { font-size: 12px; color: var(--text-soft); text-align: left; margin-top: 6px; }
+
+  /* כרטיס שאלה */
+  .question-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow);
+    display: none;
+    animation: slideIn 0.4s ease both;
+  }
+  .question-card.active { display: block; }
+
+  .q-number { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .q-text { font-size: 17px; font-weight: 700; color: var(--blue); line-height: 1.5; margin-bottom: 20px; }
+  .q-sub { font-size: 13px; color: var(--text-soft); margin-top: -14px; margin-bottom: 18px; line-height: 1.5; }
+
+  /* אפשרויות בחירה */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    background: white;
+  }
+  .option:hover { border-color: var(--blue); background: #f0f4ff; }
+  .option.selected { border-color: var(--blue); background: #f0f4ff; color: var(--blue); font-weight: 700; }
+  .option.selected .option-dot { background: var(--blue); border-color: var(--blue); }
+  .option-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .option.selected .option-dot::after {
+    content: '';
+    width: 8px; height: 8px;
+    background: white;
+    border-radius: 50%;
+  }
+
+  /* שדה חופשי */
+  .free-text {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Heebo', sans-serif;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    color: var(--text);
+    transition: border 0.2s;
+  }
+  .free-text:focus { border-color: var(--blue); }
+
+  /* כפתורים */
+  .btn-next {
+    width: 100%;
+    padding: 15px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+    margin-top: 20px;
+    transition: all 0.2s;
+  }
+  .btn-next:hover { background: var(--blue-light); transform: translateY(-1px); }
+  .btn-next:active { transform: scale(0.98); }
+  .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-skip {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+    margin-top: 8px;
+  }
+
+  /* מסך סיום */
+  .done-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    display: none;
+    animation: slideIn 0.4s ease both;
+  }
+  .done-card.active { display: block; }
+  .done-icon { font-size: 64px; margin-bottom: 16px; }
+  .done-title { font-size: 22px; font-weight: 800; color: var(--blue); margin-bottom: 10px; }
+  .done-text { font-size: 14px; color: var(--text-soft); line-height: 1.7; }
+
+  /* אנימציות */
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🛡️</div>
+  <h1>שומרים — סקר קצר</h1>
+  <p>3 דקות מזמנך יעזרו לנו להבין אם זה מה שאתם צריכים</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-text" id="progressText">שאלה 1 מתוך 9</div>
+</div>
+
+<!-- שאלה 1 -->
+<div class="question-card active" id="q1">
+  <div class="q-number">שאלה 1</div>
+  <div class="q-text">כשהילד שלך יוצא לרחוב לבד — מי שומר עליו?</div>
+  <div class="q-sub">ואם הייתה קהילת הורים שמגיבה לקריאתו תוך דקות — כמה זה היה חשוב לך?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q1')"><div class="option-dot"></div>חיוני — זה בדיוק מה שחסר לי</div>
+    <div class="option" onclick="selectOption(this, 'q1')"><div class="option-dot"></div>חשוב מאוד</div>
+    <div class="option" onclick="selectOption(this, 'q1')"><div class="option-dot"></div>נחמד אבל לא הכרחי</div>
+    <div class="option" onclick="selectOption(this, 'q1')"><div class="option-dot"></div>לא ממש צריך/ה את זה</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(1)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 2 -->
+<div class="question-card" id="q2">
+  <div class="q-number">שאלה 2</div>
+  <div class="q-text">כמה פעמים בשבוע הילדים שלך בחוץ לבד?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q2')"><div class="option-dot"></div>כל יום</div>
+    <div class="option" onclick="selectOption(this, 'q2')"><div class="option-dot"></div>כמה פעמים בשבוע</div>
+    <div class="option" onclick="selectOption(this, 'q2')"><div class="option-dot"></div>לפעמים</div>
+    <div class="option" onclick="selectOption(this, 'q2')"><div class="option-dot"></div>כמעט אף פעם</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(2)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 3 -->
+<div class="question-card" id="q3">
+  <div class="q-number">שאלה 3</div>
+  <div class="q-text">חששת פעם לביטחון הילד/ים שלך ברחוב?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q3')"><div class="option-dot"></div>כן, לעתים קרובות</div>
+    <div class="option" onclick="selectOption(this, 'q3')"><div class="option-dot"></div>כן, לפעמים</div>
+    <div class="option" onclick="selectOption(this, 'q3')"><div class="option-dot"></div>לעתים רחוקות</div>
+    <div class="option" onclick="selectOption(this, 'q3')"><div class="option-dot"></div>לא ממש</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(3)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 4 -->
+<div class="question-card" id="q4">
+  <div class="q-number">שאלה 4</div>
+  <div class="q-text">אם שכנים והורים מהקהילה שלך היו חלק מרשת כזו — האם היית מצטרף/ת?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q4')"><div class="option-dot"></div>כן, מיד</div>
+    <div class="option" onclick="selectOption(this, 'q4')"><div class="option-dot"></div>כנראה שכן</div>
+    <div class="option" onclick="selectOption(this, 'q4')"><div class="option-dot"></div>צריך/ה לחשוב</div>
+    <div class="option" onclick="selectOption(this, 'q4')"><div class="option-dot"></div>כנראה שלא</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(4)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 5 -->
+<div class="question-card" id="q5">
+  <div class="q-number">שאלה 5</div>
+  <div class="q-text">מה היה מדאיג אותך הכי הרבה ברשת כזו?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q5')"><div class="option-dot"></div>מי האנשים שיגיעו לילד שלי</div>
+    <div class="option" onclick="selectOption(this, 'q5')"><div class="option-dot"></div>פרטיות — שלא יידעו איפה הילד שלי</div>
+    <div class="option" onclick="selectOption(this, 'q5')"><div class="option-dot"></div>ילדים שישלחו קריאות סתם</div>
+    <div class="option" onclick="selectOption(this, 'q5')"><div class="option-dot"></div>אחריות — מה קורה אם משהו משתבש</div>
+    <div class="option" onclick="selectOption(this, 'q5')"><div class="option-dot"></div>לא מדאיג אותי</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(5)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 6 -->
+<div class="question-card" id="q6">
+  <div class="q-number">שאלה 6</div>
+  <div class="q-text">האם היית מרשים/ה לילד/ים שלך להשתמש באפליקציה כזו?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q6')"><div class="option-dot"></div>בהחלט כן</div>
+    <div class="option" onclick="selectOption(this, 'q6')"><div class="option-dot"></div>כנראה שכן</div>
+    <div class="option" onclick="selectOption(this, 'q6')"><div class="option-dot"></div>לא בטוח/ה</div>
+    <div class="option" onclick="selectOption(this, 'q6')"><div class="option-dot"></div>לא</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(6)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 7 -->
+<div class="question-card" id="q7">
+  <div class="q-number">שאלה 7</div>
+  <div class="q-text">רשת הגנה לילדים — 3.5 ₪ לחודש למשפחה שלמה. מה דעתך?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q7')"><div class="option-dot"></div>ברור שכן — זה כלום על בטיחות הילד</div>
+    <div class="option" onclick="selectOption(this, 'q7')"><div class="option-dot"></div>סביר לגמרי</div>
+    <div class="option" onclick="selectOption(this, 'q7')"><div class="option-dot"></div>אעדיף שיהיה חינם</div>
+    <div class="option" onclick="selectOption(this, 'q7')"><div class="option-dot"></div>לא רלוונטי אליי</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(7)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 8 -->
+<div class="question-card" id="q8">
+  <div class="q-number">שאלה 8</div>
+  <div class="q-text">האם היית ממליץ/ה על רשת כזו לחברים?</div>
+  <div class="options">
+    <div class="option" onclick="selectOption(this, 'q8')"><div class="option-dot"></div>בהחלט כן</div>
+    <div class="option" onclick="selectOption(this, 'q8')"><div class="option-dot"></div>כנראה שכן</div>
+    <div class="option" onclick="selectOption(this, 'q8')"><div class="option-dot"></div>לא בטוח/ה</div>
+    <div class="option" onclick="selectOption(this, 'q8')"><div class="option-dot"></div>לא</div>
+  </div>
+  <button class="btn-next" onclick="nextQ(8)" disabled>המשך ←</button>
+</div>
+
+<!-- שאלה 9 -->
+<div class="question-card" id="q9">
+  <div class="q-number">שאלה 9</div>
+  <div class="q-text">יש לך עוד מה לומר? רעיון, דאגה, הצעה — הכל מעניין אותנו</div>
+  <textarea class="free-text" id="freeText" placeholder="כתוב/י כאן..."></textarea>
+  <button class="btn-next" onclick="submitSurvey()">שלח/י ✓</button>
+  <button class="btn-skip" onclick="submitSurvey()">דלג/י על שאלה זו</button>
+</div>
+
+<!-- מסך סיום -->
+<div class="done-card" id="doneCard">
+  <div class="done-icon">🙏</div>
+  <div class="done-title">תודה רבה!</div>
+  <div class="done-text">תשובותך חשובות לנו מאוד.<br>אתה/את עוזר/ת לנו לבנות כלי שישמור על הילדים שלנו. 🛡️</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+  const answers = {};
+  const totalQ = 9;
+
+  function selectOption(el, qId) {
+    const card = document.getElementById(qId);
+    card.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    answers[qId] = el.textContent.trim();
+    card.querySelector('.btn-next').disabled = false;
+  }
+
+  function nextQ(current) {
+    const currentCard = document.getElementById('q' + current);
+    const nextCard = document.getElementById('q' + (current + 1));
+    currentCard.classList.remove('active');
+    if (nextCard) {
+      nextCard.classList.add('active');
+      updateProgress(current + 1);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress(current) {
+    const pct = Math.round((current / totalQ) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = 'שאלה ' + current + ' מתוך ' + totalQ;
+  }
+
+  async function submitSurvey() {
+    answers['q9'] = document.getElementById('freeText').value.trim();
+    document.getElementById('q9').classList.remove('active');
+    document.getElementById('doneCard').classList.add('active');
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressText').textContent = 'הושלם ✓';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      await _supabase.from('shomrim_survey').insert([{
+        q1: answers['q1'] || null,
+        q2: answers['q2'] || null,
+        q3: answers['q3'] || null,
+        q4: answers['q4'] || null,
+        q5: answers['q5'] || null,
+        q6: answers['q6'] || null,
+        q7: answers['q7'] || null,
+        q8: answers['q8'] || null,
+        q9_free: answers['q9'] || null,
+        created_at: new Date().toISOString()
+      }]);
+    } catch (e) {
+      console.warn('שגיאה בשמירת סקר:', e);
+    }
+  }
+
+  updateProgress(1);
+</script>
+</body>
+</html>
