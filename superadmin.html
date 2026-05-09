@@ -707,9 +707,7 @@
     const concerns = {};
     rows.forEach(r => { if (r.q5) concerns[r.q5] = (concerns[r.q5] || 0) + 1; });
     const topConcern = Object.entries(concerns).sort((a,b) => b[1]-a[1])[0];
-    const freeTexts = rows.filter(r => r.q9_free && r.q9_free.trim()).map(r => r.q9_free).join('
----
-');
+    const freeTexts = rows.filter(r => r.q9_free && r.q9_free.trim()).map(r => r.q9_free).join(' | ');
 
     const prompt = `אתה יועץ עסקי ישראלי המנתח תוצאות סקר שוק לאפליקציה חדשה בשם "שומרים" — רשת הורים מתנדבים שמגיבים בזמן אמת לקריאת ילדים במצוקה ברחוב.
 
