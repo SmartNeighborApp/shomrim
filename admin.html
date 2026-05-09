@@ -441,7 +441,7 @@
       </div>
       <div class="list-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <div class="list-title">רשימת הורים מאושרים — 40 ₪ לשנה</div>
+          <div class="list-title">רשימת הורים מאושרים — 42 ₪ לשנה — 3.5 ₪ לחודש (מנוי משפחתי)</div>
           <div id="collectionSummary" style="font-size:14px; font-weight:700; color:var(--blue);"></div>
         </div>
         <div id="collectionList"><div class="empty-state">טוען...</div></div>
@@ -985,8 +985,8 @@
     }
     const paid = parents.filter(p => p.paid_annual);
     const unpaid = parents.filter(p => !p.paid_annual);
-    const totalAmount = parents.length * 40;
-    const paidAmount = paid.length * 40;
+    const totalAmount = parents.length * 42;
+    const paidAmount = paid.length * 42;
     document.getElementById('collectionSummary').innerHTML =
       `✅ שולם: ₪${paidAmount} · ⚠️ ממתין: ₪${(totalAmount - paidAmount)} · סה"כ: ₪${totalAmount}`;
     let html = `<table class="collection-table"><thead><tr>
@@ -1036,8 +1036,8 @@
       return;
     }
     const paid = parents.filter(p => p.paid_annual);
-    const totalAmount = parents.length * 40;
-    const paidAmount = paid.length * 40;
+    const totalAmount = parents.length * 42;
+    const paidAmount = paid.length * 42;
     document.getElementById('collectionSummary').innerHTML =
       `✅ שולם: ₪${paidAmount} · ⚠️ ממתין: ₪${totalAmount - paidAmount} · סה"כ: ₪${totalAmount}`;
     let html = `<table class="collection-table"><thead><tr>
