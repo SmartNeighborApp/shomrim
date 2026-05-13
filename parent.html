@@ -188,7 +188,7 @@
 
   // הפעלת התראות — נקראת רק בלחיצת הורה על הכפתור
   async function enableNotifications() {
-    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+    if (!('Notification' in window)) {
       alert('הדפדפן שלך לא תומך בהתראות');
       return;
     }
@@ -198,29 +198,22 @@
         alert('לא אישרת התראות — לא תקבל עדכונים כשהאפליקציה סגורה');
         return;
       }
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: null
-      }).catch(() => null);
-      if (sub) {
-        await _supabase.from('shomrim_users')
-          .update({ push_subscription: JSON.stringify(sub) })
-          .eq('id', session.id);
-      }
-      document.getElementById('notifyBtn').textContent = '✅ התראות פעילות';
-      document.getElementById('notifyBtn').style.background = '#006622';
-      document.getElementById('notifyBtn').onclick = null;
+      setNotifyActive();
     } catch (e) {
-      console.warn('Push registration failed:', e);
+      console.warn('Notification error:', e);
     }
   }
 
+  function setNotifyActive() {
+    const btn = document.getElementById('notifyBtn');
+    btn.textContent = '✅ התראות פעילות';
+    btn.style.background = '#006622';
+    btn.onclick = null;
+  }
+
   // בדיקה אם כבר אושרו התראות
-  if (Notification.permission === 'granted') {
-    document.getElementById('notifyBtn').textContent = '✅ התראות פעילות';
-    document.getElementById('notifyBtn').style.background = '#006622';
-    document.getElementById('notifyBtn').onclick = null;
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    setNotifyActive();
   }
 
   const respondedEvents = new Set();
