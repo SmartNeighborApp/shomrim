@@ -279,6 +279,10 @@
   function skipEvent(eventId) {
     const card = document.getElementById(`event-${eventId}`);
     if (card) card.style.display = 'none';
+    // שמירה ב-localStorage כדי שיישאר מוסתר גם אחרי רענון
+    const skipped = JSON.parse(localStorage.getItem('shomrim_skipped_' + session.id) || '[]');
+    if (!skipped.includes(eventId)) skipped.push(eventId);
+    localStorage.setItem('shomrim_skipped_' + session.id, JSON.stringify(skipped));
   }
 
   async function respondToEvent(eventId, btn) {
@@ -355,7 +359,15 @@
       query = query.eq('school_name', session.school_name);
     }
     const { data } = await query;
-    renderEvents(data);
+    const skipped = JSON.parse(localStorage.getItem('shomrim_skipped_' + session.id) || '[]');
+    // ניקוי אירועים ישנים מה-localStorage (מעל 24 שעות)
+    if (data && skipped.length) {
+      const activeIds = data.map(e => e.id);
+      const stillActive = skipped.filter(id => activeIds.includes(id));
+      localStorage.setItem('shomrim_skipped_' + session.id, JSON.stringify(stillActive));
+    }
+    const filtered = (data || []).filter(e => !skipped.includes(e.id));
+    renderEvents(filtered);
   }
 
   // בדיקת כוננות מוגברת בטעינה
