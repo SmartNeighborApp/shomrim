@@ -201,6 +201,17 @@
   .loading { text-align: center; padding: 20px; color: var(--text-soft); font-size: 14px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
+  /* הודעה לכולם */
+  .broadcast-box { background: var(--blue-pale); border: 2px solid var(--blue); border-radius: var(--radius-sm); padding: 20px; margin-bottom: 20px; }
+  .broadcast-title { font-size: 15px; font-weight: 700; color: var(--blue); margin-bottom: 12px; }
+  .broadcast-textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-mid); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Heebo', sans-serif; outline: none; resize: none; height: 80px; margin-bottom: 12px; }
+  .broadcast-textarea:focus { border-color: var(--blue); }
+  .btn-broadcast { padding: 14px 28px; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .broadcast-result { font-size: 13px; margin-top: 10px; color: var(--green); font-weight: 600; display: none; }
+
+  /* הורים רדומים */
+  .dormant-badge { background: var(--orange-light); color: var(--orange); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+
   /* דוח */
   .btn-export { padding: 10px 20px; background: var(--blue-pale); color: var(--blue); border: 2px solid var(--blue); border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all 0.2s; }
   .btn-export:hover { background: var(--blue); color: white; }
@@ -268,6 +279,12 @@
     </div>
     <div class="nav-item" onclick="showSection('report')">
       <span class="nav-icon">📄</span> דוחות
+    </div>
+    <div class="nav-item" onclick="showSection('broadcast')">
+      <span class="nav-icon">📢</span> הודעה לכולם
+    </div>
+    <div class="nav-item" onclick="showSection('dormant')">
+      <span class="nav-icon">😴</span> הורים רדומים
     </div>
     <div class="nav-item" onclick="showSection('collection')">
       <span class="nav-icon">💰</span> גבייה
@@ -445,6 +462,34 @@
           <div id="collectionSummary" style="font-size:14px; font-weight:700; color:var(--blue);"></div>
         </div>
         <div id="collectionList"><div class="empty-state">טוען...</div></div>
+      </div>
+    </div>
+
+    <!-- הודעה לכולם -->
+    <div class="section" id="sec-broadcast">
+      <div class="page-header"><div class="page-title">📢 הודעה לכולם</div></div>
+      <div class="list-card">
+        <div class="broadcast-box">
+          <div class="broadcast-title">שלח הודעה לכל ההורים המאושרים ברשת</div>
+          <textarea class="broadcast-textarea" id="broadcastMsg" placeholder="לדוגמה: מחר ערב יש אירוע בשכונה — אנא היו ערניים..."></textarea>
+          <button class="btn-broadcast" onclick="sendBroadcast()">📢 שלח הודעה</button>
+          <div class="broadcast-result" id="broadcastResult"></div>
+        </div>
+        <div style="font-size:13px; color:var(--text-soft); background:var(--gray); border-radius:var(--radius-sm); padding:14px;">
+          ⚠️ ההודעה תישמר במערכת ותופיע כהתראה לכל הורה בפעם הבאה שיפתח את האפליקציה.
+        </div>
+      </div>
+    </div>
+
+    <!-- הורים רדומים -->
+    <div class="section" id="sec-dormant">
+      <div class="page-header">
+        <div class="page-title">😴 הורים רדומים</div>
+        <button class="btn-export" onclick="loadDormant()">🔄 עדכן</button>
+      </div>
+      <div class="list-card">
+        <div style="font-size:13px; color:var(--text-soft); margin-bottom:16px;">הורים מאושרים שלא הגיבו לאף קריאה ב-30 ימים האחרונים</div>
+        <div id="dormantList"><div class="loading">טוען...</div></div>
       </div>
     </div>
 
@@ -1020,55 +1065,64 @@
     await loadCollection();
   }
 
-  // ===== גבייה =====
-  async function loadCollection() {
-    const { data: parents } = await _supabase
-      .from('shomrim_users')
-      .select('*')
-      .eq('role', 'parent')
-      .eq('is_verified', true)
-      .eq('school_name', adminSchool)
-      .order('created_at', { ascending: false });
-    const list = document.getElementById('collectionList');
+  // ===== הודעה לכולם =====
+  async function sendBroadcast() {
+    const msg = document.getElementById('broadcastMsg').value.trim();
+    if (!msg) return;
+    const resultEl = document.getElementById('broadcastResult');
+    resultEl.style.display = 'none';
+    // שמירת ההודעה בטבלת כוננות כהודעה קהילתית
+    await _supabase.from('shomrim_alert_modes').delete().eq('school_name', adminSchool).eq('active', false);
+    await _supabase.from('shomrim_alert_modes').insert([{
+      school_name: adminSchool,
+      active: false,
+      message: '📢 ' + msg
+    }]);
+    resultEl.textContent = '✅ ההודעה נשלחה לכל ההורים!';
+    resultEl.style.display = 'block';
+    document.getElementById('broadcastMsg').value = '';
+    setTimeout(() => { resultEl.style.display = 'none'; }, 4000);
+  }
+
+  // ===== הורים רדומים =====
+  async function loadDormant() {
+    const list = document.getElementById('dormantList');
+    list.innerHTML = '<div class="loading">טוען...</div>';
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    // הורים מאושרים
+    const { data: parents } = await _supabase.from('shomrim_users').select('*').eq('role', 'parent').eq('is_verified', true).eq('school_name', adminSchool);
     if (!parents || !parents.length) {
       list.innerHTML = '<div class="empty-state">אין הורים מאושרים עדיין</div>';
-      document.getElementById('collectionSummary').textContent = '';
       return;
     }
-    const paid = parents.filter(p => p.paid_annual);
-    const totalAmount = parents.length * 42;
-    const paidAmount = paid.length * 42;
-    document.getElementById('collectionSummary').innerHTML =
-      `✅ שולם: ₪${paidAmount} · ⚠️ ממתין: ₪${totalAmount - paidAmount} · סה"כ: ₪${totalAmount}`;
-    let html = `<table class="collection-table"><thead><tr>
-      <th>שם</th><th>טלפון</th><th>תאריך הצטרפות</th><th>סטטוס תשלום</th><th>פעולה</th>
-    </tr></thead><tbody>`;
-    parents.forEach(p => {
+    // מגיבים ב-30 יום האחרונים
+    const { data: responders } = await _supabase.from('shomrim_responders').select('parent_id').gte('created_at', thirtyDaysAgo);
+    const activeIds = new Set((responders || []).map(r => r.parent_id));
+    const dormant = parents.filter(p => !activeIds.has(p.id));
+    if (!dormant.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div>כל ההורים פעילים!</div>';
+      return;
+    }
+    list.innerHTML = '';
+    dormant.forEach(p => {
       const joined = new Date(p.created_at).toLocaleDateString('he-IL');
-      const isPaid = p.paid_annual;
-      html += `<tr class="${isPaid ? 'paid' : ''}">
-        <td><strong>${p.name}</strong></td>
-        <td>${p.phone}</td>
-        <td>${joined}</td>
-        <td>${isPaid ? '<span class="badge-paid">✅ שולם</span>' : '<span class="badge-unpaid">⚠️ טרם שולם</span>'}</td>
-        <td>${isPaid
-          ? `<button class="btn-suspend" onclick="markUnpaid('${p.id}')">↩️ בטל</button>`
-          : `<button class="btn-approve" onclick="markPaidParent('${p.id}')">✅ סמן שולם</button>`}
-        </td>
-      </tr>`;
+      const item = document.createElement('div');
+      item.className = 'person-card';
+      const av = p.photo_url ? `<img class="person-avatar" src="${p.photo_url}">` : `<div class="person-avatar-ph">${p.name[0]}</div>`;
+      item.innerHTML = `${av}
+        <div class="person-info">
+          <div class="person-name">${p.name} <span class="dormant-badge">😴 לא הגיב 30 יום</span></div>
+          <div class="person-meta">📱 ${p.phone} · נרשם ${joined}</div>
+        </div>
+        <div class="person-actions">
+          <button class="btn-suspend" onclick="suspendParent('${p.id}')">⏸ השעה</button>
+        </div>`;
+      list.appendChild(item);
     });
-    html += '</tbody></table>';
-    list.innerHTML = html;
-  }
-
-  async function markPaidParent(id) {
-    await _supabase.from('shomrim_users').update({ paid_annual: true }).eq('id', id);
-    await loadCollection();
-  }
-
-  async function markUnpaid(id) {
-    await _supabase.from('shomrim_users').update({ paid_annual: false }).eq('id', id);
-    await loadCollection();
+    const countEl = document.createElement('div');
+    countEl.style.cssText = 'font-size:13px; color:var(--text-soft); margin-bottom:16px; font-weight:600;';
+    countEl.textContent = `${dormant.length} הורים רדומים מתוך ${parents.length} מאושרים`;
+    list.insertBefore(countEl, list.firstChild);
   }
 
   // ===== שינוי PIN =====
