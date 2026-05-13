@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שומרים — מפת הקהילה</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  .header { width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 10px; }
+  .header h2 { color: #1a3c6e; font-size: 20px; }
+  .back-btn { background: none; border: none; color: #1a3c6e; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: bold; text-decoration: none; }
+
+  /* סטטיסטיקות */
+  .stats-row { display: flex; gap: 12px; width: 100%; max-width: 600px; margin-bottom: 20px; }
+  .stat-card { flex: 1; background: white; border-radius: 16px; padding: 16px 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .stat-num { font-size: 28px; font-weight: 900; color: #1a3c6e; }
+  .stat-label { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.3; }
+
+  /* מפה */
+  .section-card { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 600px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  .section-title { font-size: 16px; font-weight: bold; color: #1a3c6e; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  #communityMap { width: 100%; height: 300px; border-radius: 14px; overflow: hidden; }
+
+  /* פילטר */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn { padding: 8px 14px; border: 2px solid #ddd; border-radius: 20px; background: white; font-size: 13px; cursor: pointer; font-family: inherit; color: #555; transition: all 0.2s; }
+  .filter-btn.active { border-color: #1a3c6e; background: #1a3c6e; color: white; font-weight: bold; }
+
+  /* כרטיס אירוע סגור */
+  .event-item { padding: 14px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 12px; align-items: flex-start; }
+  .event-item:last-child { border-bottom: none; }
+  .event-badge { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .badge-ok { background: #f0fff4; }
+  .badge-dispute { background: #fff9e6; }
+  .badge-help { background: #fff3e6; }
+  .badge-police { background: #fff0f0; }
+  .event-info { flex: 1; }
+  .event-info-title { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 4px; }
+  .event-info-meta { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .responders-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .responder-chip { display: flex; align-items: center; gap: 5px; background: #f0f4ff; border-radius: 20px; padding: 3px 8px; font-size: 11px; color: #1a3c6e; font-weight: bold; }
+  .responder-chip img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+  .responder-chip .avatar { width: 18px; height: 18px; border-radius: 50%; background: #1a3c6e; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* מפה פעילים */
+  .active-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #cc0000; animation: pulse 1.5s infinite; margin-left: 6px; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  .empty-state { text-align: center; color: #aaa; padding: 30px; font-size: 14px; }
+  .loading { text-align: center; color: #aaa; padding: 20px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>🗺️ מפת הקהילה</h2>
+  <a href="parent.html" class="back-btn">← חזרה</a>
+</div>
+
+<!-- סטטיסטיקות -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" id="statActive">—</div>
+    <div class="stat-label">אירועים פעילים כרגע</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statWeek">—</div>
+    <div class="stat-label">טופלו השבוע</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statParents">—</div>
+    <div class="stat-label">הורים פעילים</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statAvgTime">—</div>
+    <div class="stat-label">דקות תגובה ממוצע</div>
+  </div>
+</div>
+
+<!-- מפה חיה -->
+<div class="section-card">
+  <div class="section-title">
+    <span class="active-dot"></span>
+    אירועים פעילים עכשיו
+  </div>
+  <div id="communityMap"></div>
+  <div id="activeEventsList" style="margin-top:14px;"></div>
+</div>
+
+<!-- ספריית אירועים -->
+<div class="section-card">
+  <div class="section-title">📚 ספריית אירועים שטופלו</div>
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterEvents('all', this)">הכל</button>
+    <button class="filter-btn" onclick="filterEvents('week', this)">השבוע</button>
+    <button class="filter-btn" onclick="filterEvents('month', this)">החודש</button>
+    <button class="filter-btn" onclick="filterEvents('year', this)">השנה</button>
+  </div>
+  <div id="closedEventsList"><div class="loading">טוען...</div></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+  const session = getSession();
+  if (!session || session.role !== 'parent') window.location.href = 'index.html';
+
+  let map = null;
+  let allClosedEvents = [];
+
+  const resolutionLabel = {
+    ok: '🟢 הכל בסדר',
+    dispute: '🟡 ויכוח שנפתר',
+    help: '🟠 הוזעקה עזרה',
+    police: '🔴 נקראה משטרה'
+  };
+
+  const resolutionBadge = {
+    ok: 'badge-ok',
+    dispute: 'badge-dispute',
+    help: 'badge-help',
+    police: 'badge-police'
+  };
+
+  const resolutionEmoji = { ok: '✅', dispute: '🤝', help: '🆘', police: '👮' };
+
+  function timeAgo(dateStr) {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'עכשיו';
+    if (diff < 3600) return `לפני ${Math.floor(diff/60)} דקות`;
+    if (diff < 86400) return `לפני ${Math.floor(diff/3600)} שעות`;
+    return new Date(dateStr).toLocaleDateString('he-IL');
+  }
+
+  function urgencyLabel(u) {
+    if (u === 'low') return '🟡 בינוני';
+    if (u === 'high') return '🟠 דחוף';
+    if (u === 'critical') return '🔴 חירום';
+    return '🕐 איסוף';
+  }
+
+  // אתחול מפה
+  function initMap(lat, lng) {
+    if (map) return;
+    map = L.map('communityMap').setView([lat || 31.87, lng || 34.80], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+  }
+
+  async function loadAll() {
+    const school = session.school_name;
+
+    // טעינת אירועים פעילים
+    let activeQuery = _supabase.from('shomrim_sos_events').select('*').eq('status', 'open').order('created_at', { ascending: false });
+    if (school) activeQuery = activeQuery.eq('school_name', school);
+    const { data: active } = await activeQuery;
+
+    // טעינת אירועים סגורים
+    let closedQuery = _supabase.from('shomrim_sos_events').select('*').eq('status', 'handled').order('created_at', { ascending: false }).limit(100);
+    if (school) closedQuery = closedQuery.eq('school_name', school);
+    const { data: closed } = await closedQuery;
+    allClosedEvents = closed || [];
+
+    // סטטיסטיקות
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const weekEvents = allClosedEvents.filter(e => e.created_at > weekAgo);
+
+    document.getElementById('statActive').textContent = (active || []).length;
+    document.getElementById('statWeek').textContent = weekEvents.length;
+
+    let parentsQuery = _supabase.from('shomrim_users').select('id', { count: 'exact', head: true }).eq('role', 'parent').eq('is_verified', true);
+    if (school) parentsQuery = parentsQuery.eq('school_name', school);
+    const { count: parentsCount } = await parentsQuery;
+    document.getElementById('statParents').textContent = parentsCount || 0;
+    document.getElementById('statAvgTime').textContent = '~5';
+
+    // מפה — ממרכז לפי אירוע ראשון עם מיקום
+    const firstWithLoc = (active || []).find(e => e.lat && e.lng) || allClosedEvents.find(e => e.lat && e.lng);
+    if (firstWithLoc) {
+      initMap(firstWithLoc.lat, firstWithLoc.lng);
+    } else {
+      initMap(31.87, 34.80);
+    }
+
+    // סימון אירועים פעילים על המפה
+    (active || []).forEach(ev => {
+      if (!ev.lat || !ev.lng) return;
+      const color = ev.urgency === 'critical' ? '#cc0000' : ev.urgency === 'high' ? '#ff7700' : '#ffc107';
+      const marker = L.circleMarker([ev.lat, ev.lng], { radius: 14, fillColor: color, color: 'white', weight: 2, fillOpacity: 0.9 }).addTo(map);
+      marker.bindPopup(`<b>${urgencyLabel(ev.urgency)}</b><br>${timeAgo(ev.created_at)}`);
+    });
+
+    // סימון אירועים סגורים על המפה בצבע שקוף
+    allClosedEvents.filter(e => e.lat && e.lng).slice(0, 30).forEach(ev => {
+      L.circleMarker([ev.lat, ev.lng], { radius: 8, fillColor: '#006622', color: 'white', weight: 1, fillOpacity: 0.4 }).addTo(map);
+    });
+
+    // רשימת אירועים פעילים
+    await renderActiveEvents(active || []);
+
+    // ספרייה
+    renderClosedEvents(allClosedEvents);
+  }
+
+  async function renderActiveEvents(events) {
+    const el = document.getElementById('activeEventsList');
+    if (!events.length) {
+      el.innerHTML = '<div class="empty-state">אין אירועים פעילים כרגע 🟢</div>';
+      return;
+    }
+    let html = '';
+    for (const ev of events) {
+      const { data: responders } = await _supabase.from('shomrim_responders').select('parent_name, parent_photo').eq('event_id', ev.id).eq('status', 'coming');
+      const chips = (responders || []).map(r => `<div class="responder-chip">${r.parent_photo ? `<img src="${r.parent_photo}">` : `<div class="avatar">${r.parent_name?.[0] || '?'}</div>`}${r.parent_name || 'הורה'}</div>`).join('');
+      html += `<div class="event-item">
+        <div class="event-badge badge-police" style="background:#fff0f0;">${urgencyLabel(ev.urgency).split(' ')[0]}</div>
+        <div class="event-info">
+          <div class="event-info-title">${urgencyLabel(ev.urgency)} — ${timeAgo(ev.created_at)}</div>
+          <div class="event-info-meta">📍 ${ev.lat ? `${ev.lat.toFixed(3)}, ${ev.lng.toFixed(3)}` : 'מיקום לא זמין'}</div>
+          ${chips ? `<div class="responders-row">${chips}</div>` : '<div style="font-size:12px; color:#aaa;">ממתין למגיבים...</div>'}
+        </div>
+      </div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function renderClosedEvents(events) {
+    const el = document.getElementById('closedEventsList');
+    if (!events.length) {
+      el.innerHTML = '<div class="empty-state">אין אירועים בתקופה זו</div>';
+      return;
+    }
+    let html = '';
+    events.slice(0, 30).forEach(ev => {
+      const badge = resolutionBadge[ev.resolution_type] || 'badge-ok';
+      const emoji = resolutionEmoji[ev.resolution_type] || '✅';
+      const label = resolutionLabel[ev.resolution_type] || '✅ טופל';
+      html += `<div class="event-item">
+        <div class="event-badge ${badge}">${emoji}</div>
+        <div class="event-info">
+          <div class="event-info-title">${label}</div>
+          <div class="event-info-meta">${urgencyLabel(ev.urgency)} · ${timeAgo(ev.created_at)}</div>
+          ${ev.resolution_note ? `<div style="font-size:12px; color:#555; margin-top:4px;">${ev.resolution_note}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  function filterEvents(period, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    let filtered = allClosedEvents;
+    const now = Date.now();
+    if (period === 'week') filtered = allClosedEvents.filter(e => new Date(e.created_at) > new Date(now - 7 * 86400000));
+    if (period === 'month') filtered = allClosedEvents.filter(e => new Date(e.created_at) > new Date(now - 30 * 86400000));
+    if (period === 'year') filtered = allClosedEvents.filter(e => new Date(e.created_at) > new Date(now - 365 * 86400000));
+    renderClosedEvents(filtered);
+  }
+
+  // האזנה בזמן אמת
+  _supabase.channel('community_events')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'shomrim_sos_events' }, () => loadAll())
+    .subscribe();
+
+  loadAll();
+</script>
+</body>
+</html>
