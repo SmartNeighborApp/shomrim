@@ -63,6 +63,21 @@
   .alert-banner-title { font-size: 15px; font-weight: bold; color: #cc5500; margin-bottom: 4px; }
   .alert-banner-msg { font-size: 13px; color: #7d3c00; }
 
+  /* מסך שינוי PIN */
+  .pin-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .pin-overlay.active { display: flex; }
+  .pin-box { background: white; border-radius: 20px; padding: 28px; width: 100%; max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+  .pin-title { font-size: 18px; font-weight: bold; color: #1a3c6e; margin-bottom: 20px; text-align: center; }
+  .pin-field { margin-bottom: 14px; }
+  .pin-field label { display: block; font-size: 13px; color: #444; font-weight: bold; margin-bottom: 6px; }
+  .pin-field input { width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 12px; font-size: 20px; font-family: inherit; outline: none; text-align: center; letter-spacing: 6px; }
+  .pin-field input:focus { border-color: #1a3c6e; }
+  .pin-error { background: #fff0f0; border: 1px solid #ffcccc; color: #cc0000; padding: 8px 12px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; display: none; text-align: center; }
+  .pin-success { background: #f0fff4; border: 1px solid #ccffdd; color: #006622; padding: 8px 12px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; display: none; text-align: center; }
+  .pin-btns { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-save-pin { flex: 2; padding: 14px; background: #1a3c6e; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn-cancel-pin { flex: 1; padding: 14px; background: #f5f5f5; color: #888; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: inherit; }
+
   /* חיוג מהיר */
   .emergency-panel { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 440px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 8px; }
   .emergency-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 14px; text-align: center; }
@@ -87,6 +102,7 @@
     <div style="font-size:13px; color:#666;">שלום, <span id="userName" style="font-weight:bold"></span></div>
     <button id="notifyBtn" onclick="enableNotifications()" style="background:#1a3c6e; color:white; border:none; border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit;">🔔 הפעל התראות</button>
     <a href="community.html" style="background:#f0f4ff; color:#1a3c6e; border:1.5px solid #1a3c6e; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:bold; text-decoration:none; font-family:inherit;">🗺️ מפת הקהילה</a>
+    <button onclick="document.getElementById('pinOverlay').classList.add('active')" style="background:#fff5e6; color:#cc5500; border:1.5px solid #cc5500; border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit;">🔑 שנה PIN</button>
   </div>
 </div>
 
@@ -126,6 +142,31 @@
     </div>
     <textarea class="resolution-note" id="resolutionNote" placeholder="הערות נוספות (אופציונלי)..."></textarea>
     <button class="btn-save-resolution" onclick="saveResolution()">שמור וסגור ✅</button>
+  </div>
+</div>
+
+<!-- מסך שינוי PIN -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <div class="pin-title">🔑 שינוי קוד PIN</div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-success" id="pinSuccess"></div>
+    <div class="pin-field">
+      <label>PIN נוכחי</label>
+      <input type="password" id="pinOld" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="pin-field">
+      <label>PIN חדש</label>
+      <input type="password" id="pinNew" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="pin-field">
+      <label>אישור PIN חדש</label>
+      <input type="password" id="pinConfirm" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="pin-btns">
+      <button class="btn-cancel-pin" onclick="closePinOverlay()">ביטול</button>
+      <button class="btn-save-pin" onclick="changePin()">שמור</button>
+    </div>
   </div>
 </div>
 
@@ -347,6 +388,36 @@
     toast.textContent = msg;
     toast.style.display = 'block';
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+
+  function closePinOverlay() {
+    document.getElementById('pinOverlay').classList.remove('active');
+    document.getElementById('pinOld').value = '';
+    document.getElementById('pinNew').value = '';
+    document.getElementById('pinConfirm').value = '';
+    document.getElementById('pinError').style.display = 'none';
+    document.getElementById('pinSuccess').style.display = 'none';
+  }
+
+  async function changePin() {
+    const oldPin = document.getElementById('pinOld').value.trim();
+    const newPin = document.getElementById('pinNew').value.trim();
+    const confirm = document.getElementById('pinConfirm').value.trim();
+    const errEl = document.getElementById('pinError');
+    const sucEl = document.getElementById('pinSuccess');
+    errEl.style.display = 'none';
+    sucEl.style.display = 'none';
+    if (!oldPin || !newPin || !confirm) { errEl.textContent = 'יש למלא את כל השדות'; errEl.style.display = 'block'; return; }
+    if (newPin.length !== 4) { errEl.textContent = 'PIN חייב להיות 4 ספרות'; errEl.style.display = 'block'; return; }
+    if (newPin !== confirm) { errEl.textContent = 'הקודים החדשים אינם תואמים'; errEl.style.display = 'block'; return; }
+    if (oldPin !== session.pin) { errEl.textContent = 'ה-PIN הנוכחי שגוי'; errEl.style.display = 'block'; return; }
+    const { error } = await _supabase.from('shomrim_users').update({ pin: newPin }).eq('id', session.id);
+    if (error) { errEl.textContent = 'שגיאה בשמירה — נסה שוב'; errEl.style.display = 'block'; return; }
+    session.pin = newPin;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    sucEl.textContent = '✅ PIN שונה בהצלחה!';
+    sucEl.style.display = 'block';
+    setTimeout(() => closePinOverlay(), 1500);
   }
 
   async function loadEvents() {
